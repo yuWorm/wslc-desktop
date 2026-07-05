@@ -101,26 +101,16 @@ jobs:
           }
 
           New-Item -ItemType Directory -Force artifacts\release | Out-Null
-          $before = @(Get-ChildItem -Path $PWD -Filter "*.msix" -File -ErrorAction SilentlyContinue)
-
-          winapp package $layout --cert $env:CERT_PATH --password $env:CERT_PASSWORD --executable wslc-desktop.exe --quiet
-
-          $after = @(Get-ChildItem -Path $PWD -Filter "*.msix" -File -ErrorAction SilentlyContinue)
-          $package = $after |
-            Where-Object { $before.FullName -notcontains $_.FullName } |
-            Sort-Object LastWriteTimeUtc -Descending |
-            Select-Object -First 1
-
-          if ($null -eq $package) {
-            $package = $after | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
-          }
-
-          if ($null -eq $package) {
-            throw "winapp package did not produce an MSIX file."
-          }
-
           $destination = Join-Path $PWD "artifacts\release\wslc-desktop-$env:RELEASE_VERSION-${{ matrix.rid }}.msix"
-          Move-Item -LiteralPath $package.FullName -Destination $destination -Force
+          winapp package $layout --cert $env:CERT_PATH --cert-password $env:CERT_PASSWORD --executable wslc-desktop.exe --output $destination --quiet
+          if ($LASTEXITCODE -ne 0) {
+            throw "winapp package exited with code $LASTEXITCODE."
+          }
+
+          if (-not (Test-Path -LiteralPath $destination)) {
+            throw "winapp package did not produce $destination."
+          }
+
           $hash = Get-FileHash -Algorithm SHA256 -LiteralPath $destination
           "$($hash.Hash.ToLowerInvariant())  $(Split-Path -Leaf $destination)" | Set-Content -NoNewline -Encoding UTF8 "$destination.sha256"
 
