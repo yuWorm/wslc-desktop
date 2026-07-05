@@ -79,6 +79,7 @@ Assert-Contains $workflow 'Get-FileHash' "Release workflow must generate checksu
 Assert-Contains $workflow 'actions/upload-artifact@v4' "Release workflow must upload per-platform artifacts."
 Assert-Contains $workflow 'actions/download-artifact@v4' "Release workflow must collect matrix artifacts before release."
 Assert-Contains $workflow 'softprops/action-gh-release@v2' "Release workflow must publish artifacts to GitHub Releases."
+Assert-Contains $workflow 'prerelease:\s*\$\{\{\s*contains\(github\.ref_name,\s*''-''\)\s*\}\}' "Release workflow must mark pre-release tags such as beta builds as GitHub prereleases."
 Assert-Contains $workflow 'docs/RELEASE_NOTES\.md' "Release workflow must use release notes from docs."
 
 Assert-Contains $fullRelease 'EnableDevelopmentCodeSigning=false' "Full release verifier must disable Debug loose-layout development signing in CI."

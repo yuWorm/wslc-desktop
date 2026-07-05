@@ -144,6 +144,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: WSLC Desktop ${{ github.ref_name }}
           body_path: docs/RELEASE_NOTES.md
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             artifacts/release/*.msix
             artifacts/release/*.sha256
