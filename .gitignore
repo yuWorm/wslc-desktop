@@ -54,4 +54,5 @@ _ReSharper*/
 Generated\ Files/
 *_wpftmp.csproj
 /sources
-/docs
+/docs.bak/
+/docs/superpowers/

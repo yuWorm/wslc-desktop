@@ -2,6 +2,11 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $workflowPath = Join-Path $root ".github\workflows\release.yml"
+$gitignorePath = Join-Path $root ".gitignore"
+$fullReleasePath = Join-Path $root "scripts\Verify-FullRelease.ps1"
+$releaseNotesPath = Join-Path $root "docs\RELEASE_NOTES.md"
+$dockerMatrixPath = Join-Path $root "docs\DOCKER_API_COMPATIBILITY_MATRIX.md"
+$runtimeMatrixPath = Join-Path $root "docs\RUNTIME_PROVIDER_MATRIX.md"
 
 function Assert-Contains {
     param(
@@ -32,6 +37,16 @@ if (-not (Test-Path $workflowPath)) {
 }
 
 $workflow = Get-Content -Raw $workflowPath
+$gitignore = Get-Content -Raw $gitignorePath
+$fullRelease = Get-Content -Raw $fullReleasePath
+
+foreach ($path in @($releaseNotesPath, $dockerMatrixPath, $runtimeMatrixPath)) {
+    if (-not (Test-Path $path)) {
+        throw "Missing release documentation required by release automation: $path"
+    }
+}
+
+Assert-NotContains $gitignore '(?m)^/docs\s*$' ".gitignore must not ignore docs because release automation publishes docs/RELEASE_NOTES.md and source gates require docs matrices."
 
 Assert-Contains $workflow '(?m)^\s*on:\s*$' "Release workflow must declare triggers."
 Assert-Contains $workflow '(?m)^\s*push:\s*$' "Release workflow must be push-triggered."
@@ -62,5 +77,11 @@ Assert-Contains $workflow 'actions/upload-artifact@v4' "Release workflow must up
 Assert-Contains $workflow 'actions/download-artifact@v4' "Release workflow must collect matrix artifacts before release."
 Assert-Contains $workflow 'softprops/action-gh-release@v2' "Release workflow must publish artifacts to GitHub Releases."
 Assert-Contains $workflow 'docs/RELEASE_NOTES\.md' "Release workflow must use release notes from docs."
+
+Assert-Contains $fullRelease 'EnableDevelopmentCodeSigning=false' "Full release verifier must disable Debug loose-layout development signing in CI."
+Assert-Contains $fullRelease 'RuntimeIdentifier=\$ReleaseRid' "Full release verifier must build the selected release RID."
+Assert-Contains $fullRelease 'PublishReadyToRun=false' "Full release verifier must avoid ReadyToRun restore mismatches on GitHub-hosted runners."
+Assert-Contains $fullRelease 'Invoke-ProcessStep "dotnet build --no-restore"' "Full release verifier must check native dotnet build exit codes."
+Assert-Contains $fullRelease 'Invoke-ProcessStep "Release build"' "Full release verifier must check native Release build exit codes."
 
 Write-Host "GITHUB_RELEASE_WORKFLOW_OK"

@@ -120,8 +120,8 @@ Assert-Contains $dockerVerify "DOCKER_API_DOCKER_CLI_OK" "DockerApiCompatVerify 
 Assert-Contains $dockerVerify "requireReleasePackaged" "DockerApiCompatVerify docker-cli mode must require the Release AppX packaged daemon."
 
 Assert-Contains $fullVerify "dotnet build --no-restore" "Full release verifier must run a full build."
-Assert-Contains $fullVerify "dotnet restore wslc-desktop\.csproj" "Full release verifier must restore the root project before no-restore builds."
-Assert-Contains $fullVerify "dotnet restore src\\wslcd\\wslcd\.csproj" "Full release verifier must restore packaged daemon RID assets."
+Assert-Contains $fullVerify 'Invoke-ProcessStep "dotnet restore root project"' "Full release verifier must restore the root project before no-restore builds."
+Assert-Contains $fullVerify 'Invoke-ProcessStep "dotnet restore wslcd host RID"' "Full release verifier must restore packaged daemon RID assets."
 Assert-Contains $fullVerify "RuntimeIdentifier=any" "Full release verifier must restore Windows-targeted verifier tools with RuntimeIdentifier=any."
 Assert-Contains $fullVerify "WslcdSmokeVerify" "Full release verifier must include daemon smoke."
 Assert-Contains $fullVerify "WSLCD_SMOKE_DAEMON_PATH" "Full release verifier must run WslcdSmokeVerify against the packaged daemon path so WDAC-blocked Debug DLLs do not block release gates."
