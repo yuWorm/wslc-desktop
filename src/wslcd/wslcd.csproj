@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>wslcd-desktop</AssemblyName>
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WslcDesktop.Contracts\WslcDesktop.Contracts.csproj" />
+    <ProjectReference Include="..\WslcDesktop.Runtime\WslcDesktop.Runtime.csproj" />
+  </ItemGroup>
+</Project>

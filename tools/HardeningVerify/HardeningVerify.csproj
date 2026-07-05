@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Models\WslcDomainModels.cs" Link="Models\WslcDomainModels.cs" />
+    <Compile Include="..\..\Models\TerminalSessionModels.cs" Link="Models\TerminalSessionModels.cs" />
+    <Compile Include="..\..\Services\IWslcServices.cs" Link="Services\IWslcServices.cs" />
+    <Compile Include="..\..\Services\ContainerCreateInputParser.cs" Link="Services\ContainerCreateInputParser.cs" />
+    <Compile Include="..\..\Services\WslcCliOutputParser.cs" Link="Services\WslcCliOutputParser.cs" />
+    <Compile Include="..\..\Services\AppDiagnosticsService.cs" Link="Services\AppDiagnosticsService.cs" />
+    <Compile Include="..\..\Services\AppLanguage.cs" Link="Services\AppLanguage.cs" />
+    <Compile Include="..\..\Services\AppStringLocalizer.cs" Link="Services\AppStringLocalizer.cs" />
+    <Compile Include="..\..\Services\FileAppSettingsService.cs" Link="Services\FileAppSettingsService.cs" />
+  </ItemGroup>
+</Project>

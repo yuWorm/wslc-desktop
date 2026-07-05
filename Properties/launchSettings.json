@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "wslc-desktop (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "wslc-desktop (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

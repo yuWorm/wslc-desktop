@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="wslc_desktop.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:wslc_desktop.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Padding="24,16,24,16" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="2">
+                <TextBlock x:Uid="SettingsTitle" Style="{StaticResource TitleTextBlockStyle}" Text="Settings" />
+                <TextBlock x:Uid="SettingsSubtitle" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Configure app storage, language, diagnostics, and terminal behavior." />
+                <InfoBar x:Uid="SettingsFailedInfo" IsOpen="{Binding HasError}" Message="{Binding ErrorMessage}" Severity="Error" Title="Settings failed" />
+            </StackPanel>
+            <Button
+                Grid.Column="1"
+                AutomationProperties.AutomationId="BtnSettingsSave"
+                HorizontalAlignment="Right"
+                IsEnabled="{Binding CanSaveSettings}"
+                Click="SaveSettings_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontSize="14" Glyph="&#xE74E;" />
+                    <TextBlock x:Uid="SettingsSaveButtonText" Text="Save Settings" />
+                </StackPanel>
+            </Button>
+        </Grid>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="12">
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock x:Uid="SettingsSessionHeading" FontSize="18" FontWeight="SemiBold" Text="Application" />
+                    <InfoBar x:Uid="SettingsInfo" IsOpen="True" Message="{Binding Message}" Severity="Informational" Title="Settings" />
+                    <TextBox x:Uid="SettingsDataRoot" AutomationProperties.AutomationId="TxtSettingsDataRoot" Header="App data root" Text="{Binding DataRoot, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <ComboBox x:Uid="SettingsLanguage" Header="Language" AutomationProperties.AutomationId="CmbSettingsLanguage" SelectedValue="{Binding Language, Mode=TwoWay}" SelectedValuePath="Tag">
+                        <ComboBoxItem x:Uid="SettingsLanguageSystem" Content="System" Tag="system" />
+                        <ComboBoxItem Content="中文" Tag="zh-CN" />
+                        <ComboBoxItem Content="English" Tag="en-US" />
+                    </ComboBox>
+                    <ToggleSwitch x:Uid="SettingsLaunchAtLogin" AutomationProperties.AutomationId="TglLaunchAtLogin" Header="Launch at sign-in" IsOn="{Binding LaunchAtLogin, Mode=TwoWay}" />
+                    <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding StartupTaskStatus}" TextWrapping="WrapWholeWords" />
+                </StackPanel>
+            </Border>
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock x:Uid="SettingsCliToolsHeading" FontSize="18" FontWeight="SemiBold" Text="CLI tools" />
+                    <TextBlock x:Uid="SettingsCliToolsDescription" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Install Docker CLI helpers used by external docker and docker compose commands." TextWrapping="WrapWholeWords" />
+                    <InfoBar x:Uid="SettingsCliToolsStatusInfo" IsOpen="True" Message="{Binding CliToolsStatus}" Severity="Informational" Title="CLI tools status" />
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Uid="SettingsCliToolsBinLabel" FontWeight="SemiBold" Text="Install directory" />
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding CliToolsBinDirectory}" TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button AutomationProperties.AutomationId="BtnRefreshCliTools" Click="RefreshCliTools_Click" IsEnabled="{Binding CanSaveSettings}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                                <TextBlock x:Uid="SettingsCliToolsRefreshText" Text="Refresh" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.AutomationId="BtnOpenCliToolsDialog" Click="OpenCliToolsDialog_Click" IsEnabled="{Binding CanSaveSettings}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE8E5;" />
+                                <TextBlock x:Uid="SettingsCliToolsManageText" Text="Install / Manage CLI tools" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.AutomationId="BtnCreateDockerContextDefault" Click="CreateDockerContextDefault_Click" IsEnabled="{Binding CanSaveSettings}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE8AB;" />
+                                <TextBlock x:Uid="SettingsCliToolsDockerContextText" Text="Use WSLC Desktop Docker context" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock x:Uid="SettingsRuntimeProviderHeading" FontSize="18" FontWeight="SemiBold" Text="Runtime provider" />
+                    <ComboBox x:Uid="SettingsRuntimeProvider" AutomationProperties.AutomationId="CmbRuntimeProvider" Header="Provider" SelectedValue="{Binding RuntimeProvider, Mode=TwoWay}" SelectedValuePath="Tag">
+                        <ComboBoxItem x:Uid="SettingsRuntimeProviderWslcCli" Content="WSLC CLI" Tag="wslc-cli" />
+                        <ComboBoxItem x:Uid="SettingsRuntimeProviderDockerApi" Content="Docker API" Tag="docker-api" />
+                    </ComboBox>
+                    <StackPanel Spacing="10" Visibility="{x:Bind local:SettingsPage.BoolToVisibility(ViewModel.IsWslcCliProvider), Mode=OneWay}">
+                        <TextBlock x:Uid="SettingsWslcSpecialDescription" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="WSLC CLI commands inherit these proxy, mirror, and environment settings through the daemon process." TextWrapping="WrapWholeWords" />
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Uid="SettingsWslcHttpProxy" AutomationProperties.AutomationId="TxtWslcHttpProxy" Header="HTTP proxy" PlaceholderText="http://127.0.0.1:7890" Text="{Binding WslcHttpProxy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox x:Uid="SettingsWslcHttpsProxy" Grid.Column="1" AutomationProperties.AutomationId="TxtWslcHttpsProxy" Header="HTTPS proxy" PlaceholderText="http://127.0.0.1:7890" Text="{Binding WslcHttpsProxy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+                        <TextBox x:Uid="SettingsWslcNoProxy" AutomationProperties.AutomationId="TxtWslcNoProxy" Header="NO_PROXY" PlaceholderText="localhost,127.0.0.1,.local" Text="{Binding WslcNoProxy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox x:Uid="SettingsWslcImageMirror" AutomationProperties.AutomationId="TxtWslcImageMirror" Header="Image mirror" PlaceholderText="registry.example.com/library" Text="{Binding WslcImageMirror, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <ToggleSwitch x:Uid="SettingsWslcRewriteImageTag" AutomationProperties.AutomationId="TglWslcRewriteImageTag" Header="Rename image tag after pull" IsOn="{Binding WslcRewriteImageTag, Mode=TwoWay}" />
+                        <ToggleSwitch x:Uid="SettingsWslcRemoveRewrittenSourceTag" AutomationProperties.AutomationId="TglWslcRemoveRewrittenSourceTag" Header="Delete original tag after rename" IsEnabled="{Binding CanRemoveRewrittenSourceTag}" IsOn="{Binding WslcRemoveRewrittenSourceTag, Mode=TwoWay}" />
+                        <TextBox x:Uid="SettingsWslcEnvironment" AutomationProperties.AutomationId="TxtWslcEnvironment" AcceptsReturn="True" Header="Execution environment" Height="112" PlaceholderText="KEY=value" Text="{Binding WslcEnvironment, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="NoWrap" />
+                    </StackPanel>
+                    <StackPanel Spacing="10" Visibility="{x:Bind local:SettingsPage.BoolToVisibility(ViewModel.IsDockerApiProvider), Mode=OneWay}">
+                        <TextBlock x:Uid="SettingsDockerConfigDescription" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Docker API provider settings are managed by Docker-compatible engines outside WSLC Desktop." TextWrapping="WrapWholeWords" />
+                        <TextBox x:Uid="SettingsDockerApiHost" AutomationProperties.AutomationId="TxtDockerApiHost" Header="Docker API host" PlaceholderText="npipe:////./pipe/docker_engine" Text="{Binding DockerApiHost, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <ToggleSwitch x:Uid="SettingsAllowTcpDockerApi" AutomationProperties.AutomationId="TglAllowTcpDockerApi" Header="Allow TCP Docker API host" IsOn="{Binding AllowTcpDockerApi, Mode=TwoWay}" />
+                        <Button AutomationProperties.AutomationId="BtnOpenDockerConfig" Command="{Binding OpenDockerConfigCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE8A7;" />
+                                <TextBlock x:Uid="SettingsOpenDockerConfigText" Text="Open Docker config" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <InfoBar x:Uid="SettingsProviderPreviewInfo" IsOpen="True" Message="{Binding ProviderPreview}" Severity="Informational" Title="Provider preview" />
+                    <Button AutomationProperties.AutomationId="BtnTestProvider" Command="{Binding TestProviderCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE9CE;" />
+                            <TextBlock x:Uid="SettingsTestProviderButtonText" Text="Test Provider" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock x:Uid="SettingsTerminalHeading" FontSize="18" FontWeight="SemiBold" Text="Terminal" />
+                    <TextBox x:Uid="SettingsDefaultShell" AutomationProperties.AutomationId="TxtSettingsDefaultShell" Header="Default shell" Text="{Binding DefaultShell, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <ToggleSwitch x:Uid="SettingsExternalTerminal" AutomationProperties.AutomationId="TglSettingsExternalTerminal" Header="Open external Windows Terminal when available" IsOn="{Binding PreferExternalTerminal, Mode=TwoWay}" />
+                </StackPanel>
+            </Border>
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock x:Uid="SettingsDaemonHeading" FontSize="18" FontWeight="SemiBold" Text="Daemon management" />
+                    <TextBlock x:Uid="SettingsDaemonDescription" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Start, restart, or stop the local wslcd-desktop daemon used by the app and Docker-compatible pipe." TextWrapping="WrapWholeWords" />
+                    <InfoBar x:Uid="SettingsDaemonStatusInfo" IsOpen="True" Message="{Binding DaemonStatusText}" Severity="Informational" Title="Daemon status" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button AutomationProperties.AutomationId="BtnStartDaemon" Click="StartDaemon_Click" IsEnabled="{Binding CanStartDaemon}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE768;" />
+                                <TextBlock x:Uid="SettingsStartDaemonText" Text="Start wslcd-desktop" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.AutomationId="BtnRestartDaemon" Click="RestartDaemon_Click" IsEnabled="{Binding CanRestartDaemon}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE777;" />
+                                <TextBlock x:Uid="SettingsRestartDaemonText" Text="Restart wslcd-desktop" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.AutomationId="BtnStopDaemon" Click="StopDaemon_Click" Foreground="{ThemeResource SystemFillColorCriticalBrush}" IsEnabled="{Binding CanStopDaemon}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE71A;" />
+                                <TextBlock x:Uid="SettingsStopDaemonText" Text="Stop wslcd-desktop" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock x:Uid="SettingsDiagnosticsHeading" FontSize="18" FontWeight="SemiBold" Text="Diagnostics" />
+                        <ProgressRing Height="20" IsActive="{Binding IsBusy}" Width="20" />
+                    </StackPanel>
+                    <TextBlock x:Uid="SettingsDiagnosticsDescription" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Export host readiness, settings, recent operations, compose projects, volumes, and published ports." />
+                    <Button AutomationProperties.AutomationId="BtnSettingsExportDiagnostics" Command="{Binding ExportDiagnosticsCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE8D5;" />
+                            <TextBlock x:Uid="SettingsExportDiagnosticsText" Text="Export Diagnostics" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

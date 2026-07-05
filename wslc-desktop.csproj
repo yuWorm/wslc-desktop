@@ -1,0 +1,134 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>wslc_desktop</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())</RuntimeIdentifier>
+    <PublishProfile Condition="Exists('Properties\PublishProfiles\win-$(Platform).pubxml')">win-$(Platform).pubxml</PublishProfile>
+    <UseWinUI>true</UseWinUI>
+    <WinUISDKReferences>false</WinUISDKReferences>
+    <WindowsSdkPackageVersion>10.0.26100.80</WindowsSdkPackageVersion>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tools\**\*.cs" />
+    <Compile Remove="src\**\*.cs" />
+    <None Remove="tools\**\*" />
+    <None Remove="src\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\SplashScreen.scale-200.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\LockScreenLogo.scale-200.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Square44x44Logo.scale-200.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Square44x44Logo.targetsize-48_altform-lightunplated.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\StoreLogo.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\AppIcon.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <!--
+    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
+    Tools extension to be activated for this project even if the Windows App SDK Nuget
+    package has not yet been restored.
+  -->
+  <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <ProjectCapability Include="Msix" />
+  </ItemGroup>
+
+  <!--
+    Microsoft.Windows.SDK.BuildTools.WinApp hooks the .NET CLI Run target and
+    launches through loose AppX package identity. Development scripts sign the
+    loose AppX layout before launch so local application-control policies do
+    not block project DLLs.
+  -->
+  <ItemGroup>
+    <PackageReference Include="H.NotifyIcon.WinUI" Version="2.4.1" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp" Version="0.4.0" />
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
+  </ItemGroup>
+
+  <Target Name="SignDevelopmentLooseLayout" AfterTargets="CopyWslcdToOutput" BeforeTargets="_WinAppPrepareRunArguments;RunPackagedApp" Condition="'$(Configuration)' == 'Debug' and '$(_WinAppRunSupportActive)' == 'true' and '$(EnableDevelopmentCodeSigning)' != 'false' and Exists('$(MSBuildProjectDirectory)\scripts\Sign-DevelopmentOutput.ps1')">
+    <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\scripts\Sign-DevelopmentOutput.ps1&quot; -Path &quot;$(OutDir).&quot;" StandardOutputImportance="high" StandardErrorImportance="high" />
+    <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\scripts\Sign-DevelopmentOutput.ps1&quot; -Path &quot;$(WinAppLooseLayoutPath).&quot;" StandardOutputImportance="high" StandardErrorImportance="high" />
+  </Target>
+
+  <Target Name="StopDevelopmentProcessesBeforeWinAppRun" BeforeTargets="_WinAppCopyContentToLooseLayout;_WinAppBuildRunArgs;RunPackagedApp" Condition="'$(Configuration)' == 'Debug' and '$(_WinAppRunSupportActive)' == 'true' and '$(DisableDevelopmentProcessCleanup)' != 'true' and Exists('$(MSBuildProjectDirectory)\scripts\Stop-DevelopmentProcesses.ps1')">
+    <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\scripts\Stop-DevelopmentProcesses.ps1&quot; -Quiet" StandardOutputImportance="high" StandardErrorImportance="high" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="src\WslcDesktop.Contracts\WslcDesktop.Contracts.csproj" />
+    <ProjectReference Include="src\WslcDesktop.DaemonClient\WslcDesktop.DaemonClient.csproj" />
+  </ItemGroup>
+
+  <Target Name="CopyWslcdToOutput" AfterTargets="Build">
+    <PropertyGroup>
+      <WslcdRuntimeIdentifier Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</WslcdRuntimeIdentifier>
+      <WslcdRuntimeIdentifier Condition="'$(WslcdRuntimeIdentifier)' == '' and '$(Platform)' == 'x64'">win-x64</WslcdRuntimeIdentifier>
+      <WslcdRuntimeIdentifier Condition="'$(WslcdRuntimeIdentifier)' == '' and '$(Platform)' == 'x86'">win-x86</WslcdRuntimeIdentifier>
+      <WslcdRuntimeIdentifier Condition="'$(WslcdRuntimeIdentifier)' == '' and '$(Platform)' == 'ARM64'">win-arm64</WslcdRuntimeIdentifier>
+      <WslcdRuntimeIdentifier Condition="'$(WslcdRuntimeIdentifier)' == ''">win-$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())</WslcdRuntimeIdentifier>
+      <WslcdPublishDir>$(MSBuildProjectDirectory)\obj\wslcd\$(Platform)\$(Configuration)\$(WslcdRuntimeIdentifier)\publish\</WslcdPublishDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <StaleRootWslcdOutput Include="$(OutDir)wslcd-desktop.exe;$(OutDir)wslcd-desktop.dll;$(OutDir)wslcd-desktop.deps.json;$(OutDir)wslcd-desktop.runtimeconfig.json;$(OutDir)wslcd-desktop.pdb;$(OutDir)wslcd-desktop.staticwebassets.endpoints.json;$(OutDir)wslcd.exe;$(OutDir)wslcd.dll;$(OutDir)wslcd.deps.json;$(OutDir)wslcd.runtimeconfig.json;$(OutDir)wslcd.pdb;$(OutDir)wslcd.staticwebassets.endpoints.json;$(OutDir)WslcDesktop.Runtime.dll;$(OutDir)WslcDesktop.Runtime.pdb" />
+      <StaleNativeTerminalOutput Include="$(OutDir)cpprest142_2_10.dll;$(OutDir)Microsoft.Terminal*.dll;$(OutDir)Microsoft.Terminal*.pri;$(OutDir)AppX\cpprest142_2_10.dll;$(OutDir)AppX\Microsoft.Terminal*.dll;$(OutDir)AppX\Microsoft.Terminal*.pri;$(OutDir)AppX\AppX\cpprest142_2_10.dll;$(OutDir)AppX\AppX\Microsoft.Terminal*.dll;$(OutDir)AppX\AppX\Microsoft.Terminal*.pri" />
+    </ItemGroup>
+    <Delete Files="@(StaleRootWslcdOutput)" TreatErrorsAsWarnings="true" />
+    <Delete Files="@(StaleNativeTerminalOutput)" TreatErrorsAsWarnings="true" />
+    <RemoveDir Directories="$(OutDir)wslcd" />
+    <RemoveDir Directories="$(OutDir)AppX\wslcd" />
+    <RemoveDir Directories="$(OutDir)Microsoft.Terminal.Control.Projection" />
+    <RemoveDir Directories="$(OutDir)AppX\Microsoft.Terminal.Control.Projection" />
+    <RemoveDir Directories="$(OutDir)AppX\AppX\Microsoft.Terminal.Control.Projection" />
+    <RemoveDir Directories="$(WslcdPublishDir)" />
+    <MSBuild Projects="src\wslcd\wslcd.csproj" Targets="Publish" Properties="Configuration=$(Configuration);RuntimeIdentifier=$(WslcdRuntimeIdentifier);SelfContained=true;PublishSingleFile=false;PublishDir=$(WslcdPublishDir)" />
+    <ItemGroup>
+      <WslcdOutput Include="$(WslcdPublishDir)**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(WslcdOutput)" DestinationFiles="@(WslcdOutput->'$(OutDir)wslcd\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(WslcdOutput)" DestinationFiles="@(WslcdOutput->'$(OutDir)AppX\wslcd\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <!-- The copied subdirectories are self-contained daemon publishes with wslcd-desktop.exe and runtime dependencies. -->
+  </Target>
+
+  <Target Name="CopyAssetsToDevelopmentLooseLayout" AfterTargets="CopyWslcdToOutput" BeforeTargets="SignDevelopmentLooseLayout" Condition="'$(Configuration)' == 'Debug' and Exists('$(OutDir)AppX')">
+    <ItemGroup>
+      <DevelopmentLooseLayoutAsset Include="$(MSBuildProjectDirectory)\Assets\SplashScreen.scale-200.png;$(MSBuildProjectDirectory)\Assets\LockScreenLogo.scale-200.png;$(MSBuildProjectDirectory)\Assets\Square150x150Logo.scale-200.png;$(MSBuildProjectDirectory)\Assets\Square44x44Logo.scale-200.png;$(MSBuildProjectDirectory)\Assets\Square44x44Logo.targetsize-24_altform-unplated.png;$(MSBuildProjectDirectory)\Assets\Square44x44Logo.targetsize-48_altform-lightunplated.png;$(MSBuildProjectDirectory)\Assets\StoreLogo.png;$(MSBuildProjectDirectory)\Assets\AppIcon.ico;$(MSBuildProjectDirectory)\Assets\Wide310x150Logo.scale-200.png" />
+    </ItemGroup>
+    <MakeDir Directories="$(OutDir)AppX\Assets" />
+    <Copy SourceFiles="@(DevelopmentLooseLayoutAsset)" DestinationFiles="@(DevelopmentLooseLayoutAsset->'$(OutDir)AppX\Assets\%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!--
+    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
+    Explorer "Package and Publish" context menu entry to be enabled for this project even if
+    the Windows App SDK Nuget package has not yet been restored.
+  -->
+  <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+  </PropertyGroup>
+
+  <!-- Publish Properties -->
+  <PropertyGroup>
+    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
+    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
+    <!-- Keep trimming disabled while WinUI packaging and dynamic app resources are still being hardened. -->
+    <PublishTrimmed>False</PublishTrimmed>
+  </PropertyGroup>
+</Project>

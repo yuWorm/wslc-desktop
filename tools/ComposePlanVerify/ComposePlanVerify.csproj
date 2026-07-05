@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Models\WslcDomainModels.cs" Link="Models\WslcDomainModels.cs" />
+    <Compile Include="..\..\Models\TerminalSessionModels.cs" Link="Models\TerminalSessionModels.cs" />
+    <Compile Include="..\..\Services\IWslcServices.cs" Link="Services\IWslcServices.cs" />
+    <Compile Include="..\..\Services\ContainerCreateInputParser.cs" Link="Services\ContainerCreateInputParser.cs" />
+    <Compile Include="..\..\Services\ComposePlanService.cs" Link="Services\ComposePlanService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
+  </ItemGroup>
+</Project>

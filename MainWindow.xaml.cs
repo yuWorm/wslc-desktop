@@ -1,0 +1,290 @@
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using System.ComponentModel;
+using wslc_desktop.Pages;
+using wslc_desktop.Services;
+using wslc_desktop.ViewModels;
+
+// To learn more about WinUI, the WinUI project structure,
+// and more about our project templates, see: http://aka.ms/winui-project-info.
+
+namespace wslc_desktop;
+
+public sealed partial class MainWindow : Window
+{
+    private bool _allowClose;
+    private readonly DispatcherTimer _statusTimer = new()
+    {
+        Interval = TimeSpan.FromSeconds(20)
+    };
+
+    public ShellStatusViewModel ShellStatus { get; } = new(
+        cancellationToken => AppServices.DaemonDiagnostics.CaptureAsync(startIfNeeded: false, cancellationToken: cancellationToken),
+        CreateShellStatusLabels());
+
+    public AsyncRelayCommand ShowMainWindowCommand { get; }
+
+    public AsyncRelayCommand ShowSettingsCommand { get; }
+
+    public AsyncRelayCommand StartDaemonCommand { get; }
+
+    public AsyncRelayCommand RestartDaemonCommand { get; }
+
+    public AsyncRelayCommand StopDaemonCommand { get; }
+
+    public AsyncRelayCommand ExitApplicationCommand { get; }
+
+    public MainWindow()
+    {
+        ShowMainWindowCommand = new AsyncRelayCommand(() =>
+        {
+            ShowMainWindow();
+            return Task.CompletedTask;
+        });
+        ShowSettingsCommand = new AsyncRelayCommand(() =>
+        {
+            ShowMainWindow();
+            NavigateToSettings();
+            return Task.CompletedTask;
+        });
+        StartDaemonCommand = new AsyncRelayCommand(StartDaemonAsync, () => ShellStatus.CanStartDaemon);
+        RestartDaemonCommand = new AsyncRelayCommand(RestartDaemonAsync, () => ShellStatus.CanRestartDaemon);
+        StopDaemonCommand = new AsyncRelayCommand(StopDaemonAsync, () => ShellStatus.CanStopDaemon);
+        ExitApplicationCommand = new AsyncRelayCommand(ExitApplicationAsync);
+
+        InitializeComponent();
+
+        ExtendsContentIntoTitleBar = true;
+        SetTitleBar(AppTitleBar);
+        AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
+        AppWindow.SetIcon("Assets/AppIcon.ico");
+        NavFrame.Navigate(typeof(ContainersPage));
+
+        _statusTimer.Tick += ShellStatusTimer_Tick;
+        ShellStatus.PropertyChanged += ShellStatus_PropertyChanged;
+        AppTitleBar.Loaded += MainWindow_Loaded;
+        Closed += MainWindow_Closed;
+    }
+
+    private void TitleBar_PaneToggleRequested(TitleBar sender, object args)
+    {
+        NavView.IsPaneOpen = !NavView.IsPaneOpen;
+    }
+
+    private void TitleBar_BackRequested(TitleBar sender, object args)
+    {
+        NavFrame.GoBack();
+    }
+
+    private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    {
+        if (args.IsSettingsSelected)
+        {
+            NavFrame.Navigate(typeof(SettingsPage));
+        }
+        else if (args.SelectedItem is NavigationViewItem item)
+        {
+            switch (item.Tag)
+            {
+                case "containers":
+                    NavFrame.Navigate(typeof(ContainersPage));
+                    break;
+                case "images":
+                    NavFrame.Navigate(typeof(ImagesPage));
+                    break;
+                case "volumes":
+                    NavFrame.Navigate(typeof(VolumesPage));
+                    break;
+                case "networks":
+                    NavFrame.Navigate(typeof(NetworksPage));
+                    break;
+                case "compose":
+                    NavFrame.Navigate(typeof(ComposePage));
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unknown navigation item tag: {item.Tag}");
+            }
+        }
+    }
+
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        await RefreshShellStatusAsync();
+        _statusTimer.Start();
+    }
+
+    private async void ShellStatusTimer_Tick(object? sender, object e)
+    {
+        await RefreshShellStatusAsync();
+    }
+
+    private async void RefreshShellStatus_Click(object sender, RoutedEventArgs e)
+    {
+        await RefreshShellStatusAsync();
+    }
+
+    private async void StartDaemonFromStatus_Click(object sender, RoutedEventArgs e)
+    {
+        await StartDaemonAsync();
+    }
+
+    private async void RestartDaemonFromStatus_Click(object sender, RoutedEventArgs e)
+    {
+        await RestartDaemonAsync();
+    }
+
+    private async void StopDaemonFromStatus_Click(object sender, RoutedEventArgs e)
+    {
+        await StopDaemonAsync();
+    }
+
+    private void OpenSettingsFromStatus_Click(object sender, RoutedEventArgs e)
+    {
+        NavigateToSettings();
+    }
+
+    private void MainWindow_Closed(object sender, WindowEventArgs args)
+    {
+        if (_allowClose)
+        {
+            _statusTimer.Stop();
+            ShellStatus.PropertyChanged -= ShellStatus_PropertyChanged;
+            TrayIcon.Dispose();
+            return;
+        }
+
+        args.Handled = true;
+        AppWindow.Hide();
+    }
+
+    private async Task ExitApplicationAsync()
+    {
+        _allowClose = true;
+        _statusTimer.Stop();
+        ShellStatus.SetBusy(true);
+
+        try
+        {
+            await AppServices.DaemonControl.StopAllAsync();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or TimeoutException or HttpRequestException or IOException)
+        {
+            ShellStatus.ShowOfflineError(ex.Message);
+        }
+        finally
+        {
+            ShellStatus.SetBusy(false);
+            Close();
+            Application.Current.Exit();
+        }
+    }
+
+    private void ShowMainWindow()
+    {
+        AppWindow.Show();
+        Activate();
+    }
+
+    public void ShowSettingsPage()
+    {
+        ShowMainWindow();
+        NavigateToSettings();
+    }
+
+    private void NavigateToSettings()
+    {
+        NavView.SelectedItem = NavView.SettingsItem;
+        NavFrame.Navigate(typeof(SettingsPage));
+    }
+
+    public async Task RefreshShellStatusAsync()
+    {
+        await ShellStatus.RefreshAsync();
+    }
+
+    private Task StartDaemonAsync()
+    {
+        if (!ShellStatus.CanStartDaemon)
+        {
+            return Task.CompletedTask;
+        }
+
+        return RunDaemonActionAsync(cancellationToken => AppServices.DaemonControl.StartAsync(cancellationToken));
+    }
+
+    private Task RestartDaemonAsync()
+    {
+        if (!ShellStatus.CanRestartDaemon)
+        {
+            return Task.CompletedTask;
+        }
+
+        return RunDaemonActionAsync(cancellationToken => AppServices.DaemonControl.RestartAsync(cancellationToken));
+    }
+
+    private Task StopDaemonAsync()
+    {
+        if (!ShellStatus.CanStopDaemon)
+        {
+            return Task.CompletedTask;
+        }
+
+        return RunDaemonActionAsync(async cancellationToken =>
+        {
+            await AppServices.DaemonControl.StopAllAsync(cancellationToken);
+        });
+    }
+
+    private async Task RunDaemonActionAsync(Func<CancellationToken, Task> action)
+    {
+        try
+        {
+            _statusTimer.Stop();
+            ShellStatus.SetBusy(true);
+            await action(CancellationToken.None);
+            await RefreshShellStatusAsync();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or TimeoutException or HttpRequestException or IOException)
+        {
+            ShellStatus.ShowOfflineError(ex.Message);
+        }
+        finally
+        {
+            ShellStatus.SetBusy(false);
+            _statusTimer.Start();
+            RaiseTrayCommandCanExecuteChanged();
+        }
+    }
+
+    private void ShellStatus_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ShellStatusViewModel.CanStartDaemon)
+            or nameof(ShellStatusViewModel.CanRestartDaemon)
+            or nameof(ShellStatusViewModel.CanStopDaemon)
+            or nameof(ShellStatusViewModel.IsBusy)
+            or nameof(ShellStatusViewModel.State))
+        {
+            RaiseTrayCommandCanExecuteChanged();
+        }
+    }
+
+    private void RaiseTrayCommandCanExecuteChanged()
+    {
+        StartDaemonCommand.RaiseCanExecuteChanged();
+        RestartDaemonCommand.RaiseCanExecuteChanged();
+        StopDaemonCommand.RaiseCanExecuteChanged();
+    }
+
+    private static ShellStatusLabels CreateShellStatusLabels()
+    {
+        return new ShellStatusLabels(
+            AppServices.Strings.Get("ShellStatusChecking"),
+            AppServices.Strings.Get("ShellStatusDaemonOk"),
+            AppServices.Strings.Get("ShellStatusDaemonOffline"),
+            AppServices.Strings.Get("ShellStatusDaemonWarning"),
+            AppServices.Strings.Get("ShellStatusRuntimeOk"),
+            AppServices.Strings.Get("ShellStatusRuntimeIssue"),
+            AppServices.Strings.Get("ShellStatusBackendUnknown"));
+    }
+}

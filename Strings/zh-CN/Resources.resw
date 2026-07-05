@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AppTitleBar.Title" xml:space="preserve"><value>WSLC Desktop</value></data>
+  <data name="ShellStatusFlyoutTitle.Text" xml:space="preserve"><value>运行状态</value></data>
+  <data name="ShellStatusDaemonLabel.Text" xml:space="preserve"><value>Daemon</value></data>
+  <data name="ShellStatusBackendLabel.Text" xml:space="preserve"><value>后端</value></data>
+  <data name="ShellStatusRuntimeLabel.Text" xml:space="preserve"><value>运行时</value></data>
+  <data name="ShellStatusPipeLabel.Text" xml:space="preserve"><value>管道</value></data>
+  <data name="ShellStatusMessageLabel.Text" xml:space="preserve"><value>消息</value></data>
+  <data name="ShellStatusLogsLabel.Text" xml:space="preserve"><value>日志</value></data>
+  <data name="ShellStatusRefreshText.Text" xml:space="preserve"><value>刷新</value></data>
+  <data name="ShellStatusStartText.Text" xml:space="preserve"><value>启动</value></data>
+  <data name="ShellStatusRestartText.Text" xml:space="preserve"><value>重启</value></data>
+  <data name="ShellStatusStopText.Text" xml:space="preserve"><value>关闭</value></data>
+  <data name="ShellStatusSettingsText.Text" xml:space="preserve"><value>设置</value></data>
+  <data name="TrayMainWindowItem.Text" xml:space="preserve"><value>主窗口</value></data>
+  <data name="TraySettingsItem.Text" xml:space="preserve"><value>设置</value></data>
+  <data name="TrayStartDaemonItem.Text" xml:space="preserve"><value>启动 daemon</value></data>
+  <data name="TrayRestartDaemonItem.Text" xml:space="preserve"><value>重启 daemon</value></data>
+  <data name="TrayStopDaemonItem.Text" xml:space="preserve"><value>关闭 daemon</value></data>
+  <data name="TrayExitItem.Text" xml:space="preserve"><value>退出</value></data>
+  <data name="NavContainers.Content" xml:space="preserve"><value>容器</value></data>
+  <data name="NavImages.Content" xml:space="preserve"><value>镜像</value></data>
+  <data name="NavVolumes.Content" xml:space="preserve"><value>数据卷</value></data>
+  <data name="NavNetworks.Content" xml:space="preserve"><value>网络</value></data>
+  <data name="NavCompose.Content" xml:space="preserve"><value>Compose</value></data>
+  <data name="RefreshButtonText.Text" xml:space="preserve"><value>刷新</value></data>
+  <data name="DeleteButtonText.Text" xml:space="preserve"><value>删除</value></data>
+  <data name="DeleteCommand.Label" xml:space="preserve"><value>删除</value></data>
+  <data name="ColumnName.Text" xml:space="preserve"><value>名称</value></data>
+  <data name="ColumnImage.Text" xml:space="preserve"><value>镜像</value></data>
+  <data name="ColumnCpu.Text" xml:space="preserve"><value>CPU</value></data>
+  <data name="ColumnMemory.Text" xml:space="preserve"><value>内存</value></data>
+  <data name="ColumnPorts.Text" xml:space="preserve"><value>端口</value></data>
+  <data name="ColumnRepository.Text" xml:space="preserve"><value>仓库</value></data>
+  <data name="ColumnImageId.Text" xml:space="preserve"><value>镜像 ID</value></data>
+  <data name="ColumnSize.Text" xml:space="preserve"><value>大小</value></data>
+  <data name="ColumnCreated.Text" xml:space="preserve"><value>创建时间</value></data>
+  <data name="ColumnActions.Text" xml:space="preserve"><value>操作</value></data>
+  <data name="ColumnType.Text" xml:space="preserve"><value>类型</value></data>
+  <data name="ColumnUsedBy.Text" xml:space="preserve"><value>使用方</value></data>
+  <data name="ColumnDependsOn.Text" xml:space="preserve"><value>依赖</value></data>
+  <data name="ContainersTitle.Text" xml:space="preserve"><value>容器</value></data>
+  <data name="ContainersSubtitle.Text" xml:space="preserve"><value>管理 WSLC 容器生命周期、日志、终端、端口、挂载和环境变量。</value></data>
+  <data name="ContainersLoadFailedInfo.Title" xml:space="preserve"><value>容器加载失败</value></data>
+  <data name="ContainersNewButtonText.Text" xml:space="preserve"><value>新建容器</value></data>
+  <data name="ContainersSearchBox.PlaceholderText" xml:space="preserve"><value>搜索容器</value></data>
+  <data name="ContainersFilterAll.Content" xml:space="preserve"><value>全部</value></data>
+  <data name="ContainersFilterRunning.Content" xml:space="preserve"><value>运行中</value></data>
+  <data name="ContainersFilterStopped.Content" xml:space="preserve"><value>已停止</value></data>
+  <data name="ContainersStartCommand.Label" xml:space="preserve"><value>启动</value></data>
+  <data name="ContainersStopCommand.Label" xml:space="preserve"><value>停止</value></data>
+  <data name="ContainersRestartCommand.Label" xml:space="preserve"><value>重启</value></data>
+  <data name="ContainersTerminalCommand.Label" xml:space="preserve"><value>终端</value></data>
+  <data name="ContainersLogsCommand.Label" xml:space="preserve"><value>日志</value></data>
+  <data name="ContainerNameInput.Header" xml:space="preserve"><value>名称</value></data>
+  <data name="ContainerImageInput.Header" xml:space="preserve"><value>镜像</value></data>
+  <data name="ContainerCommandInput.Header" xml:space="preserve"><value>命令</value></data>
+  <data name="ContainerPortsInput.Header" xml:space="preserve"><value>端口</value></data>
+  <data name="ContainerMountsInput.Header" xml:space="preserve"><value>挂载</value></data>
+  <data name="ContainersStateInfo.Title" xml:space="preserve"><value>容器状态</value></data>
+  <data name="ColumnState.Text" xml:space="preserve"><value>状态</value></data>
+  <data name="ContainerDetailIdLabel.Text" xml:space="preserve"><value>ID</value></data>
+  <data name="ContainerDetailImageLabel.Text" xml:space="preserve"><value>镜像</value></data>
+  <data name="ContainerDetailCommandLabel.Text" xml:space="preserve"><value>命令</value></data>
+  <data name="ContainerDetailPortsLabel.Text" xml:space="preserve"><value>端口</value></data>
+  <data name="ContainerDetailStateLabel.Text" xml:space="preserve"><value>状态</value></data>
+  <data name="ContainerDetailCreatedLabel.Text" xml:space="preserve"><value>创建时间</value></data>
+  <data name="ContainerDetailUptimeLabel.Text" xml:space="preserve"><value>运行时长</value></data>
+  <data name="ContainersOverviewTab.Header" xml:space="preserve"><value>概览</value></data>
+  <data name="ContainersStatsTab.Header" xml:space="preserve"><value>统计</value></data>
+  <data name="ContainersLogsTab.Header" xml:space="preserve"><value>日志</value></data>
+  <data name="ContainersTerminalTab.Header" xml:space="preserve"><value>终端</value></data>
+  <data name="ContainersInspectTab.Header" xml:space="preserve"><value>检查</value></data>
+  <data name="ContainersOverviewSelector.Text" xml:space="preserve"><value>概览</value></data>
+  <data name="ContainersStatsSelector.Text" xml:space="preserve"><value>统计</value></data>
+  <data name="ContainersLogsSelector.Text" xml:space="preserve"><value>日志</value></data>
+  <data name="ContainersTerminalSelector.Text" xml:space="preserve"><value>终端</value></data>
+  <data name="ContainersEnvSelector.Text" xml:space="preserve"><value>环境</value></data>
+  <data name="ContainersInspectSelector.Text" xml:space="preserve"><value>检查</value></data>
+  <data name="ContainersOverviewQuickActionsHeading.Text" xml:space="preserve"><value>快捷操作</value></data>
+  <data name="ContainersOverviewOpenTerminalButtonText.Text" xml:space="preserve"><value>打开终端</value></data>
+  <data name="ContainersPortsHeading.Text" xml:space="preserve"><value>已发布端口</value></data>
+  <data name="ContainersLogsPreviewHeading.Text" xml:space="preserve"><value>日志预览</value></data>
+  <data name="ContainersTerminalPreviewHeading.Text" xml:space="preserve"><value>终端</value></data>
+  <data name="ContainersEnvHeading.Text" xml:space="preserve"><value>环境变量</value></data>
+  <data name="ContainersInspectPreviewHeading.Text" xml:space="preserve"><value>检查预览</value></data>
+  <data name="ContainersExpandLogsButton.Content" xml:space="preserve"><value>展开</value></data>
+  <data name="ContainersExpandTerminalButton.Content" xml:space="preserve"><value>展开</value></data>
+  <data name="ContainersExpandInspectButton.Content" xml:space="preserve"><value>展开</value></data>
+  <data name="ConnectTerminalButton.Label" xml:space="preserve"><value>内嵌预览</value></data>
+  <data name="DisconnectTerminalButton.Label" xml:space="preserve"><value>断开</value></data>
+  <data name="ExternalTerminalButton.Label" xml:space="preserve"><value>打开终端</value></data>
+  <data name="TerminalCapabilityInfo.Message" xml:space="preserve"><value>打开终端会在 Windows Terminal 中启动真实交互式 Shell。内嵌预览仅作为 transcript 备用方案。</value></data>
+  <data name="TerminalInputLine.Header" xml:space="preserve"><value>输入</value></data>
+  <data name="ContainersExternalTerminalButtonText.Text" xml:space="preserve"><value>外部</value></data>
+  <data name="ContainersStatsSnapshotInfo.Message" xml:space="preserve"><value>这里显示当前 wslc stats 快照；后续可增加历史趋势图。</value></data>
+  <data name="ImagesTitle.Text" xml:space="preserve"><value>镜像</value></data>
+  <data name="ImagesSubtitle.Text" xml:space="preserve"><value>拉取、标记、检查、运行、删除和清理 WSLC 镜像。</value></data>
+  <data name="ImagesLoadFailedInfo.Title" xml:space="preserve"><value>镜像加载失败</value></data>
+  <data name="ImagesPullButtonText.Text" xml:space="preserve"><value>拉取镜像</value></data>
+  <data name="ImagesSearchBox.PlaceholderText" xml:space="preserve"><value>筛选...</value></data>
+  <data name="ColumnInUse.Text" xml:space="preserve"><value>使用状态</value></data>
+  <data name="ImagesInfo.Title" xml:space="preserve"><value>WSLC 镜像</value></data>
+  <data name="ImagesReferenceInput.Header" xml:space="preserve"><value>镜像引用</value></data>
+  <data name="ImagesPullTasksTitle.Text" xml:space="preserve"><value>拉取任务</value></data>
+  <data name="ImagesEmptyInfo.Title" xml:space="preserve"><value>没有镜像</value></data>
+  <data name="ImagesEmptyInfo.Message" xml:space="preserve"><value>使用 wslc 拉取镜像后，此列表会显示内容。</value></data>
+  <data name="VolumesTitle.Text" xml:space="preserve"><value>数据卷</value></data>
+  <data name="VolumesSubtitle.Text" xml:space="preserve"><value>跟踪命名数据卷、绑定挂载、使用情况和安全清理。</value></data>
+  <data name="VolumesLoadFailedInfo.Title" xml:space="preserve"><value>数据卷加载失败</value></data>
+  <data name="VolumesNewButtonText.Text" xml:space="preserve"><value>新建数据卷</value></data>
+  <data name="VolumesSearchBox.PlaceholderText" xml:space="preserve"><value>筛选...</value></data>
+  <data name="VolumesTrackedInfo.Title" xml:space="preserve"><value>已跟踪挂载</value></data>
+  <data name="VolumesEmptyInfo.Title" xml:space="preserve"><value>没有挂载</value></data>
+  <data name="VolumesEmptyInfo.Message" xml:space="preserve"><value>创建带有 C:\data=&gt;/data 等挂载映射的容器后，此视图会显示内容。</value></data>
+  <data name="VolumeNameInput.Header" xml:space="preserve"><value>名称</value></data>
+  <data name="VolumeSizeInput.Header" xml:space="preserve"><value>大小 MB</value></data>
+  <data name="ColumnDriver.Text" xml:space="preserve"><value>驱动</value></data>
+  <data name="NetworksTitle.Text" xml:space="preserve"><value>网络</value></data>
+  <data name="NetworksSubtitle.Text" xml:space="preserve"><value>检查已发布端口、本地主机端点和冲突。</value></data>
+  <data name="NetworksLoadFailedInfo.Title" xml:space="preserve"><value>网络加载失败</value></data>
+  <data name="NetworksSearchBox.PlaceholderText" xml:space="preserve"><value>筛选...</value></data>
+  <data name="NetworksNewButtonText.Text" xml:space="preserve"><value>新建网络</value></data>
+  <data name="NetworksPublishedPortsHeading.Text" xml:space="preserve"><value>已发布端口</value></data>
+  <data name="NetworksPublishedPortsInfo.Title" xml:space="preserve"><value>已发布端口</value></data>
+  <data name="NetworksEmptyInfo.Title" xml:space="preserve"><value>没有已发布端口</value></data>
+  <data name="NetworksEmptyInfo.Message" xml:space="preserve"><value>创建带端口映射的容器后，会显示已发布端口数据。</value></data>
+  <data name="ColumnContainer.Text" xml:space="preserve"><value>容器</value></data>
+  <data name="ColumnHostPort.Text" xml:space="preserve"><value>主机端口</value></data>
+  <data name="ColumnContainerPort.Text" xml:space="preserve"><value>容器端口</value></data>
+  <data name="ColumnProtocol.Text" xml:space="preserve"><value>协议</value></data>
+  <data name="ColumnUrl.Text" xml:space="preserve"><value>URL</value></data>
+  <data name="NetworksFutureHeading.Text" xml:space="preserve"><value>未来集成</value></data>
+  <data name="NetworksFutureDns.Text" xml:space="preserve"><value>本地 DNS 别名</value></data>
+  <data name="NetworksFutureHttps.Text" xml:space="preserve"><value>需明确同意的本地 CA HTTPS</value></data>
+  <data name="NetworksFuturePortEditor.Text" xml:space="preserve"><value>端口转发规则编辑器</value></data>
+  <data name="ComposeTitle.Text" xml:space="preserve"><value>Compose</value></data>
+  <data name="ComposeSubtitle.Text" xml:space="preserve"><value>打开 compose 文件，预览服务计划，然后创建 WSLC 容器。</value></data>
+  <data name="ComposeLoadFailedInfo.Title" xml:space="preserve"><value>Compose 加载失败</value></data>
+  <data name="ComposeSearchBox.PlaceholderText" xml:space="preserve"><value>筛选...</value></data>
+  <data name="ComposeOpenButtonText.Text" xml:space="preserve"><value>打开 Compose</value></data>
+  <data name="ComposeCreateStartButtonText.Text" xml:space="preserve"><value>创建并启动</value></data>
+  <data name="ComposePreviewInfo.Title" xml:space="preserve"><value>Compose 预览</value></data>
+  <data name="ComposeEmptyInfo.Title" xml:space="preserve"><value>没有 Compose 计划</value></data>
+  <data name="ComposeEmptyInfo.Message" xml:space="preserve"><value>打开 compose.yaml 或 compose.yml 文件以生成服务计划。</value></data>
+  <data name="ComposeSelectedFileInput.Header" xml:space="preserve"><value>已选择文件</value></data>
+  <data name="ComposeProjectsHeading.Text" xml:space="preserve"><value>项目</value></data>
+  <data name="ComposeGeneratedPlanHeading.Text" xml:space="preserve"><value>生成的计划</value></data>
+  <data name="ColumnService.Text" xml:space="preserve"><value>服务</value></data>
+  <data name="ColumnMounts.Text" xml:space="preserve"><value>挂载</value></data>
+  <data name="ComposeUnsupportedRun.Text" xml:space="preserve"><value> · 不支持：</value></data>
+  <data name="SettingsTitle.Text" xml:space="preserve"><value>设置</value></data>
+  <data name="SettingsSubtitle.Text" xml:space="preserve"><value>配置应用存储、语言、诊断和终端行为。</value></data>
+  <data name="SettingsFailedInfo.Title" xml:space="preserve"><value>设置失败</value></data>
+  <data name="SettingsSessionHeading.Text" xml:space="preserve"><value>应用</value></data>
+  <data name="SettingsInfo.Title" xml:space="preserve"><value>设置</value></data>
+  <data name="SettingsDataRoot.Header" xml:space="preserve"><value>应用数据目录</value></data>
+  <data name="SettingsLanguage.Header" xml:space="preserve"><value>语言</value></data>
+  <data name="SettingsLanguageSystem.Content" xml:space="preserve"><value>跟随系统</value></data>
+  <data name="SettingsLaunchAtLogin.Header" xml:space="preserve"><value>登录时启动</value></data>
+  <data name="SettingsCliToolsHeading.Text" xml:space="preserve"><value>CLI 工具</value></data>
+  <data name="SettingsCliToolsDescription.Text" xml:space="preserve"><value>安装外部 docker 和 docker compose 命令使用的 Docker CLI 辅助工具。</value></data>
+  <data name="SettingsCliToolsStatusInfo.Title" xml:space="preserve"><value>CLI 工具状态</value></data>
+  <data name="SettingsCliToolsBinLabel.Text" xml:space="preserve"><value>安装目录</value></data>
+  <data name="SettingsCliToolsRefreshText.Text" xml:space="preserve"><value>刷新</value></data>
+  <data name="SettingsCliToolsManageText.Text" xml:space="preserve"><value>安装 / 管理 CLI 工具</value></data>
+  <data name="SettingsCliToolsDockerContextText.Text" xml:space="preserve"><value>使用 WSLC Desktop Docker context</value></data>
+  <data name="SettingsCliToolsInstallDockerText.Text" xml:space="preserve"><value>安装 Docker CLI</value></data>
+  <data name="SettingsCliToolsInstallDockerZipText.Text" xml:space="preserve"><value>安装 Docker ZIP</value></data>
+  <data name="SettingsCliToolsInstallComposeText.Text" xml:space="preserve"><value>安装 Compose</value></data>
+  <data name="SettingsCliToolsInstallComposeExeText.Text" xml:space="preserve"><value>选择 Compose EXE</value></data>
+  <data name="SettingsCliToolsAddPathText.Text" xml:space="preserve"><value>添加用户 PATH</value></data>
+  <data name="SettingsCliToolsAddSystemPathText.Text" xml:space="preserve"><value>添加系统 PATH</value></data>
+  <data name="SettingsRuntimeProviderHeading.Text" xml:space="preserve"><value>运行时 Provider</value></data>
+  <data name="SettingsRuntimeProvider.Header" xml:space="preserve"><value>Provider</value></data>
+  <data name="SettingsRuntimeProviderWslcCli.Content" xml:space="preserve"><value>WSLC CLI</value></data>
+  <data name="SettingsRuntimeProviderDockerApi.Content" xml:space="preserve"><value>Docker API</value></data>
+  <data name="SettingsWslcSpecialDescription.Text" xml:space="preserve"><value>WSLC CLI 命令会通过 daemon 进程继承这些代理、镜像和环境变量设置。</value></data>
+  <data name="SettingsWslcHttpProxy.Header" xml:space="preserve"><value>HTTP 代理</value></data>
+  <data name="SettingsWslcHttpProxy.PlaceholderText" xml:space="preserve"><value>http://127.0.0.1:7890</value></data>
+  <data name="SettingsWslcHttpsProxy.Header" xml:space="preserve"><value>HTTPS 代理</value></data>
+  <data name="SettingsWslcHttpsProxy.PlaceholderText" xml:space="preserve"><value>http://127.0.0.1:7890</value></data>
+  <data name="SettingsWslcNoProxy.Header" xml:space="preserve"><value>NO_PROXY</value></data>
+  <data name="SettingsWslcNoProxy.PlaceholderText" xml:space="preserve"><value>localhost,127.0.0.1,.local</value></data>
+  <data name="SettingsWslcImageMirror.Header" xml:space="preserve"><value>镜像代理</value></data>
+  <data name="SettingsWslcImageMirror.PlaceholderText" xml:space="preserve"><value>registry.example.com/library</value></data>
+  <data name="SettingsWslcRewriteImageTag.Header" xml:space="preserve"><value>拉取后重命名镜像 tag</value></data>
+  <data name="SettingsWslcRemoveRewrittenSourceTag.Header" xml:space="preserve"><value>重命名后删除原 tag</value></data>
+  <data name="SettingsWslcEnvironment.Header" xml:space="preserve"><value>执行环境变量</value></data>
+  <data name="SettingsWslcEnvironment.PlaceholderText" xml:space="preserve"><value>KEY=value</value></data>
+  <data name="SettingsDockerConfigDescription.Text" xml:space="preserve"><value>Docker API Provider 的设置由 WSLC Desktop 之外的 Docker 兼容引擎管理。</value></data>
+  <data name="SettingsDockerApiHost.Header" xml:space="preserve"><value>Docker API Host</value></data>
+  <data name="SettingsDockerApiHost.PlaceholderText" xml:space="preserve"><value>npipe:////./pipe/docker_engine</value></data>
+  <data name="SettingsAllowTcpDockerApi.Header" xml:space="preserve"><value>允许 TCP Docker API Host</value></data>
+  <data name="SettingsOpenDockerConfigText.Text" xml:space="preserve"><value>打开 Docker 配置</value></data>
+  <data name="SettingsProviderPreviewInfo.Title" xml:space="preserve"><value>Provider 预览</value></data>
+  <data name="SettingsTestProviderButtonText.Text" xml:space="preserve"><value>测试 Provider</value></data>
+  <data name="SettingsTerminalHeading.Text" xml:space="preserve"><value>终端</value></data>
+  <data name="SettingsDefaultShell.Header" xml:space="preserve"><value>默认 Shell</value></data>
+  <data name="SettingsExternalTerminal.Header" xml:space="preserve"><value>可用时打开外部 Windows Terminal</value></data>
+  <data name="SettingsSaveButtonText.Text" xml:space="preserve"><value>保存设置</value></data>
+  <data name="SettingsDiagnosticsHeading.Text" xml:space="preserve"><value>诊断</value></data>
+  <data name="SettingsDiagnosticsDescription.Text" xml:space="preserve"><value>导出主机就绪状态、设置、最近操作、Compose 项目、数据卷和已发布端口。</value></data>
+  <data name="SettingsExportDiagnosticsText.Text" xml:space="preserve"><value>导出诊断</value></data>
+  <data name="SettingsDaemonHeading.Text" xml:space="preserve"><value>Daemon 管理</value></data>
+  <data name="SettingsDaemonDescription.Text" xml:space="preserve"><value>启动、重启或关闭应用和 Docker 兼容管道使用的本地 wslcd-desktop daemon。</value></data>
+  <data name="SettingsDaemonStatusInfo.Title" xml:space="preserve"><value>Daemon 状态</value></data>
+  <data name="SettingsStartDaemonText.Text" xml:space="preserve"><value>启动 wslcd-desktop</value></data>
+  <data name="SettingsRestartDaemonText.Text" xml:space="preserve"><value>重启 wslcd-desktop</value></data>
+  <data name="SettingsStopDaemonText.Text" xml:space="preserve"><value>关闭 wslcd-desktop</value></data>
+  <data name="DaemonStartDialogTitle" xml:space="preserve"><value>启动 wslcd-desktop？</value></data>
+  <data name="DaemonStartDialogContent" xml:space="preserve"><value>这些设置会在 wslcd-desktop 启动时生效。是否现在启动 daemon？</value></data>
+  <data name="DaemonRestartDialogTitle" xml:space="preserve"><value>重启 wslcd-desktop？</value></data>
+  <data name="DaemonRestartDialogContent" xml:space="preserve"><value>这会停止现有 daemon 进程并启动新的 wslcd-desktop 实例。正在运行的 Docker CLI 调用可能会中断。</value></data>
+  <data name="DaemonStopDialogTitle" xml:space="preserve"><value>关闭 wslcd-desktop？</value></data>
+  <data name="DaemonStopDialogContent" xml:space="preserve"><value>这会停止现有 daemon 进程，并保持离线，直到你再次启动或其他应用工作流重新拉起它。</value></data>
+</root>

@@ -1,0 +1,160 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package ${{ matrix.platform }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x64
+            rid: win-x64
+          - platform: ARM64
+            rid: win-arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup WinApp CLI
+        uses: microsoft/setup-WinAppCli@v0.1
+
+      - name: Derive release version
+        id: version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if ($tag -notmatch '^v(?<version>\d+\.\d+\.\d+)(?:[-+].*)?$') {
+            throw "Release tags must use vMAJOR.MINOR.PATCH format. Received: $tag"
+          }
+
+          $releaseVersion = $Matches.version
+          $appxVersion = "$releaseVersion.0"
+          "release_version=$releaseVersion" >> $env:GITHUB_OUTPUT
+          "appx_version=$appxVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Stamp package manifest
+        shell: pwsh
+        env:
+          APPX_VERSION: ${{ steps.version.outputs.appx_version }}
+          WINDOWS_PUBLISHER: ${{ secrets.WINDOWS_PUBLISHER }}
+        run: |
+          $manifestPath = Join-Path $PWD "Package.appxmanifest"
+          [xml]$manifest = Get-Content -Raw $manifestPath
+          $manifest.Package.Identity.Version = $env:APPX_VERSION
+          if (-not [string]::IsNullOrWhiteSpace($env:WINDOWS_PUBLISHER)) {
+            $manifest.Package.Identity.Publisher = $env:WINDOWS_PUBLISHER
+          }
+          $manifest.Save($manifestPath)
+
+      - name: Restore and verify release layout
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File .\scripts\Verify-FullRelease.ps1 -Platform "${{ matrix.platform }}" -SkipPackage -AllowKnownLocalBlockers
+
+      - name: Prepare signing certificate
+        id: cert
+        shell: pwsh
+        env:
+          WINDOWS_SIGNING_CERT_BASE64: ${{ secrets.WINDOWS_SIGNING_CERT_BASE64 }}
+          WINDOWS_SIGNING_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERT_PASSWORD }}
+        run: |
+          New-Item -ItemType Directory -Force artifacts\signing | Out-Null
+          $certPath = Join-Path $PWD "artifacts\signing\release.pfx"
+
+          if (-not [string]::IsNullOrWhiteSpace($env:WINDOWS_SIGNING_CERT_BASE64)) {
+            [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:WINDOWS_SIGNING_CERT_BASE64))
+            "cert_path=$certPath" >> $env:GITHUB_OUTPUT
+            "cert_password=$env:WINDOWS_SIGNING_CERT_PASSWORD" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+
+          winapp cert generate --manifest . --output $certPath --if-exists overwrite --quiet
+          "cert_path=$certPath" >> $env:GITHUB_OUTPUT
+          "cert_password=password" >> $env:GITHUB_OUTPUT
+
+      - name: Package MSIX
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.release_version }}
+          APPX_VERSION: ${{ steps.version.outputs.appx_version }}
+          CERT_PATH: ${{ steps.cert.outputs.cert_path }}
+          CERT_PASSWORD: ${{ steps.cert.outputs.cert_password }}
+        run: |
+          $layout = Join-Path $PWD "bin\${{ matrix.platform }}\Release\net10.0-windows10.0.26100.0\${{ matrix.rid }}"
+          if (-not (Test-Path (Join-Path $layout "AppX\wslcd\wslcd-desktop.exe"))) {
+            throw "Packaged daemon missing from $layout"
+          }
+
+          New-Item -ItemType Directory -Force artifacts\release | Out-Null
+          $before = @(Get-ChildItem -Path $PWD -Filter "*.msix" -File -ErrorAction SilentlyContinue)
+
+          winapp package $layout --cert $env:CERT_PATH --password $env:CERT_PASSWORD --executable wslc-desktop.exe --quiet
+
+          $after = @(Get-ChildItem -Path $PWD -Filter "*.msix" -File -ErrorAction SilentlyContinue)
+          $package = $after |
+            Where-Object { $before.FullName -notcontains $_.FullName } |
+            Sort-Object LastWriteTimeUtc -Descending |
+            Select-Object -First 1
+
+          if ($null -eq $package) {
+            $package = $after | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+          }
+
+          if ($null -eq $package) {
+            throw "winapp package did not produce an MSIX file."
+          }
+
+          $destination = Join-Path $PWD "artifacts\release\wslc-desktop-$env:RELEASE_VERSION-${{ matrix.rid }}.msix"
+          Move-Item -LiteralPath $package.FullName -Destination $destination -Force
+          $hash = Get-FileHash -Algorithm SHA256 -LiteralPath $destination
+          "$($hash.Hash.ToLowerInvariant())  $(Split-Path -Leaf $destination)" | Set-Content -NoNewline -Encoding UTF8 "$destination.sha256"
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wslc-desktop-${{ steps.version.outputs.release_version }}-${{ matrix.rid }}
+          path: |
+            artifacts/release/*.msix
+            artifacts/release/*.sha256
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    runs-on: windows-latest
+    needs: package
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/release
+          pattern: wslc-desktop-*
+          merge-multiple: true
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: WSLC Desktop ${{ github.ref_name }}
+          body_path: docs/RELEASE_NOTES.md
+          files: |
+            artifacts/release/*.msix
+            artifacts/release/*.sha256
+          fail_on_unmatched_files: true

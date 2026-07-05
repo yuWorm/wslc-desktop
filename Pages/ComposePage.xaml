@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="wslc_desktop.Pages.ComposePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Padding="18,14,18,18" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Spacing="2" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock x:Uid="ComposeTitle" Style="{StaticResource TitleTextBlockStyle}" Text="Compose" />
+                    <ProgressRing Height="18" IsActive="{Binding IsLoading}" Width="18" />
+                    <ProgressRing Height="18" IsActive="{Binding IsBusy}" Width="18" />
+                </StackPanel>
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding ComposeSummaryText}" />
+            </StackPanel>
+
+            <TextBox
+                x:Uid="ComposeSearchBox"
+                AutomationProperties.AutomationId="TxtComposeSearch"
+                Grid.Column="1"
+                PlaceholderText="Filter..."
+                Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                VerticalAlignment="Center" />
+
+            <Button
+                Grid.Column="2"
+                AutomationProperties.AutomationId="BtnComposeOpen"
+                Click="OpenCompose_Click"
+                VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontSize="14" Glyph="&#xE8E5;" />
+                    <TextBlock x:Uid="ComposeOpenButtonText" Text="Open Compose" />
+                </StackPanel>
+            </Button>
+
+            <Button
+                Grid.Column="3"
+                AutomationProperties.AutomationId="BtnComposeCreateStart"
+                Command="{Binding CreateAndStartCommand}"
+                VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontSize="14" Glyph="&#xE768;" />
+                    <TextBlock x:Uid="ComposeCreateStartButtonText" Text="Create &amp; Start" />
+                </StackPanel>
+            </Button>
+
+            <Button
+                x:Uid="RefreshButton"
+                Grid.Column="4"
+                AutomationProperties.AutomationId="BtnComposeRefresh"
+                Command="{Binding RefreshCommand}"
+                VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                    <TextBlock x:Uid="RefreshButtonText" Text="Refresh" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <InfoBar
+            x:Uid="ComposeLoadFailedInfo"
+            Grid.Row="1"
+            IsOpen="{Binding HasError}"
+            Message="{Binding ErrorMessage}"
+            Severity="Error"
+            Title="Compose load failed" />
+
+        <Grid Grid.Row="2" ColumnSpacing="14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="360" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <InfoBar
+                        x:Uid="ComposeEmptyInfo"
+                        Grid.Row="0"
+                        IsOpen="{Binding IsEmpty}"
+                        Message="Open a compose.yaml or compose.yml file to generate a service plan."
+                        Severity="Informational"
+                        Title="No compose plan" />
+
+                    <Grid Grid.Row="1" Padding="16,10" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock x:Uid="ComposeProjectsHeading" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="PROJECTS" />
+                    </Grid>
+
+                    <ListView
+                        AutomationProperties.AutomationId="LstComposeProjects"
+                        Grid.Row="2"
+                        ItemsSource="{Binding VisibleProjects}"
+                        SelectionMode="None">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid MinHeight="66" Padding="14,8" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="34" Height="34" Background="{ThemeResource ControlFillColorDefaultBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" VerticalAlignment="Center">
+                                        <FontIcon FontSize="16" Glyph="&#xE71B;" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" MinWidth="0" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock FontFamily="Cascadia Mono" FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding SourcePath}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBox
+                        x:Uid="ComposeSelectedFileInput"
+                        AutomationProperties.AutomationId="TxtComposeSelectedFile"
+                        Grid.Row="0"
+                        Margin="16,12"
+                        Header="Selected file"
+                        IsReadOnly="True"
+                        Text="{Binding SelectedComposePath}" />
+
+                    <Grid Grid.Row="1" Padding="16,10" ColumnSpacing="12" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="1.4*" />
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="1.1*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Uid="ColumnService" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="SERVICE" />
+                        <TextBlock x:Uid="ColumnImage" Grid.Column="1" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="IMAGE" />
+                        <TextBlock x:Uid="ColumnPorts" Grid.Column="2" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="PORTS" />
+                        <TextBlock x:Uid="ColumnMounts" Grid.Column="3" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="MOUNTS" />
+                        <TextBlock x:Uid="ColumnDependsOn" Grid.Column="4" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="DEPENDS ON" />
+                    </Grid>
+
+                    <ListView
+                        AutomationProperties.AutomationId="LstComposeServicePlans"
+                        Grid.Row="2"
+                        ItemsSource="{Binding VisibleServicePlans}"
+                        SelectionMode="None">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid MinHeight="70" Padding="14,8" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180" />
+                                        <ColumnDefinition Width="1.4*" />
+                                        <ColumnDefinition Width="1.2*" />
+                                        <ColumnDefinition Width="1.2*" />
+                                        <ColumnDefinition Width="1.1*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Spacing="2">
+                                        <TextBlock FontFamily="Cascadia Mono" FontWeight="SemiBold" Text="{Binding ServiceName}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding ProjectName}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding Image}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="{Binding PortSummary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="3" Text="{Binding MountSummary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="4" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DependsOnSummary}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding UnsupportedSummary}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

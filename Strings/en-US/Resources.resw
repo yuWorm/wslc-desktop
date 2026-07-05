@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AppTitleBar.Title" xml:space="preserve"><value>WSLC Desktop</value></data>
+  <data name="ShellStatusFlyoutTitle.Text" xml:space="preserve"><value>Runtime status</value></data>
+  <data name="ShellStatusDaemonLabel.Text" xml:space="preserve"><value>Daemon</value></data>
+  <data name="ShellStatusBackendLabel.Text" xml:space="preserve"><value>Backend</value></data>
+  <data name="ShellStatusRuntimeLabel.Text" xml:space="preserve"><value>Runtime</value></data>
+  <data name="ShellStatusPipeLabel.Text" xml:space="preserve"><value>Pipe</value></data>
+  <data name="ShellStatusMessageLabel.Text" xml:space="preserve"><value>Message</value></data>
+  <data name="ShellStatusLogsLabel.Text" xml:space="preserve"><value>Logs</value></data>
+  <data name="ShellStatusRefreshText.Text" xml:space="preserve"><value>Refresh</value></data>
+  <data name="ShellStatusStartText.Text" xml:space="preserve"><value>Start</value></data>
+  <data name="ShellStatusRestartText.Text" xml:space="preserve"><value>Restart</value></data>
+  <data name="ShellStatusStopText.Text" xml:space="preserve"><value>Stop</value></data>
+  <data name="ShellStatusSettingsText.Text" xml:space="preserve"><value>Settings</value></data>
+  <data name="TrayMainWindowItem.Text" xml:space="preserve"><value>Main window</value></data>
+  <data name="TraySettingsItem.Text" xml:space="preserve"><value>Settings</value></data>
+  <data name="TrayStartDaemonItem.Text" xml:space="preserve"><value>Start daemon</value></data>
+  <data name="TrayRestartDaemonItem.Text" xml:space="preserve"><value>Restart daemon</value></data>
+  <data name="TrayStopDaemonItem.Text" xml:space="preserve"><value>Stop daemon</value></data>
+  <data name="TrayExitItem.Text" xml:space="preserve"><value>Exit</value></data>
+  <data name="NavContainers.Content" xml:space="preserve"><value>Containers</value></data>
+  <data name="NavImages.Content" xml:space="preserve"><value>Images</value></data>
+  <data name="NavVolumes.Content" xml:space="preserve"><value>Volumes</value></data>
+  <data name="NavNetworks.Content" xml:space="preserve"><value>Networks</value></data>
+  <data name="NavCompose.Content" xml:space="preserve"><value>Compose</value></data>
+  <data name="RefreshButtonText.Text" xml:space="preserve"><value>Refresh</value></data>
+  <data name="DeleteButtonText.Text" xml:space="preserve"><value>Delete</value></data>
+  <data name="DeleteCommand.Label" xml:space="preserve"><value>Delete</value></data>
+  <data name="ColumnName.Text" xml:space="preserve"><value>NAME</value></data>
+  <data name="ColumnImage.Text" xml:space="preserve"><value>IMAGE</value></data>
+  <data name="ColumnCpu.Text" xml:space="preserve"><value>CPU</value></data>
+  <data name="ColumnMemory.Text" xml:space="preserve"><value>MEMORY</value></data>
+  <data name="ColumnPorts.Text" xml:space="preserve"><value>PORTS</value></data>
+  <data name="ColumnRepository.Text" xml:space="preserve"><value>REPOSITORY</value></data>
+  <data name="ColumnImageId.Text" xml:space="preserve"><value>IMAGE ID</value></data>
+  <data name="ColumnSize.Text" xml:space="preserve"><value>SIZE</value></data>
+  <data name="ColumnCreated.Text" xml:space="preserve"><value>CREATED</value></data>
+  <data name="ColumnActions.Text" xml:space="preserve"><value>ACTIONS</value></data>
+  <data name="ColumnType.Text" xml:space="preserve"><value>TYPE</value></data>
+  <data name="ColumnUsedBy.Text" xml:space="preserve"><value>USED BY</value></data>
+  <data name="ColumnDependsOn.Text" xml:space="preserve"><value>DEPENDS ON</value></data>
+  <data name="ContainersTitle.Text" xml:space="preserve"><value>Containers</value></data>
+  <data name="ContainersSubtitle.Text" xml:space="preserve"><value>Manage WSLC container lifecycle, logs, terminals, ports, mounts, and environment.</value></data>
+  <data name="ContainersLoadFailedInfo.Title" xml:space="preserve"><value>Container load failed</value></data>
+  <data name="ContainersNewButtonText.Text" xml:space="preserve"><value>New Container</value></data>
+  <data name="ContainersSearchBox.PlaceholderText" xml:space="preserve"><value>Search containers</value></data>
+  <data name="ContainersFilterAll.Content" xml:space="preserve"><value>All</value></data>
+  <data name="ContainersFilterRunning.Content" xml:space="preserve"><value>Running</value></data>
+  <data name="ContainersFilterStopped.Content" xml:space="preserve"><value>Stopped</value></data>
+  <data name="ContainersStartCommand.Label" xml:space="preserve"><value>Start</value></data>
+  <data name="ContainersStopCommand.Label" xml:space="preserve"><value>Stop</value></data>
+  <data name="ContainersRestartCommand.Label" xml:space="preserve"><value>Restart</value></data>
+  <data name="ContainersTerminalCommand.Label" xml:space="preserve"><value>Terminal</value></data>
+  <data name="ContainersLogsCommand.Label" xml:space="preserve"><value>Logs</value></data>
+  <data name="ContainerNameInput.Header" xml:space="preserve"><value>Name</value></data>
+  <data name="ContainerImageInput.Header" xml:space="preserve"><value>Image</value></data>
+  <data name="ContainerCommandInput.Header" xml:space="preserve"><value>Command</value></data>
+  <data name="ContainerPortsInput.Header" xml:space="preserve"><value>Ports</value></data>
+  <data name="ContainerMountsInput.Header" xml:space="preserve"><value>Mounts</value></data>
+  <data name="ContainersStateInfo.Title" xml:space="preserve"><value>Container state</value></data>
+  <data name="ColumnState.Text" xml:space="preserve"><value>STATE</value></data>
+  <data name="ContainerDetailIdLabel.Text" xml:space="preserve"><value>ID</value></data>
+  <data name="ContainerDetailImageLabel.Text" xml:space="preserve"><value>Image</value></data>
+  <data name="ContainerDetailCommandLabel.Text" xml:space="preserve"><value>Command</value></data>
+  <data name="ContainerDetailPortsLabel.Text" xml:space="preserve"><value>Ports</value></data>
+  <data name="ContainerDetailStateLabel.Text" xml:space="preserve"><value>State</value></data>
+  <data name="ContainerDetailCreatedLabel.Text" xml:space="preserve"><value>Created</value></data>
+  <data name="ContainerDetailUptimeLabel.Text" xml:space="preserve"><value>Uptime</value></data>
+  <data name="ContainersOverviewTab.Header" xml:space="preserve"><value>Overview</value></data>
+  <data name="ContainersStatsTab.Header" xml:space="preserve"><value>Stats</value></data>
+  <data name="ContainersLogsTab.Header" xml:space="preserve"><value>Logs</value></data>
+  <data name="ContainersTerminalTab.Header" xml:space="preserve"><value>Terminal</value></data>
+  <data name="ContainersInspectTab.Header" xml:space="preserve"><value>Inspect</value></data>
+  <data name="ContainersOverviewSelector.Text" xml:space="preserve"><value>Overview</value></data>
+  <data name="ContainersStatsSelector.Text" xml:space="preserve"><value>Stats</value></data>
+  <data name="ContainersLogsSelector.Text" xml:space="preserve"><value>Logs</value></data>
+  <data name="ContainersTerminalSelector.Text" xml:space="preserve"><value>Terminal</value></data>
+  <data name="ContainersEnvSelector.Text" xml:space="preserve"><value>Env</value></data>
+  <data name="ContainersInspectSelector.Text" xml:space="preserve"><value>Inspect</value></data>
+  <data name="ContainersOverviewQuickActionsHeading.Text" xml:space="preserve"><value>Quick actions</value></data>
+  <data name="ContainersOverviewOpenTerminalButtonText.Text" xml:space="preserve"><value>Open Terminal</value></data>
+  <data name="ContainersPortsHeading.Text" xml:space="preserve"><value>Published ports</value></data>
+  <data name="ContainersLogsPreviewHeading.Text" xml:space="preserve"><value>Logs preview</value></data>
+  <data name="ContainersTerminalPreviewHeading.Text" xml:space="preserve"><value>Terminal</value></data>
+  <data name="ContainersEnvHeading.Text" xml:space="preserve"><value>Environment</value></data>
+  <data name="ContainersInspectPreviewHeading.Text" xml:space="preserve"><value>Inspect preview</value></data>
+  <data name="ContainersExpandLogsButton.Content" xml:space="preserve"><value>Expand</value></data>
+  <data name="ContainersExpandTerminalButton.Content" xml:space="preserve"><value>Expand</value></data>
+  <data name="ContainersExpandInspectButton.Content" xml:space="preserve"><value>Expand</value></data>
+  <data name="ConnectTerminalButton.Label" xml:space="preserve"><value>Embedded Preview</value></data>
+  <data name="DisconnectTerminalButton.Label" xml:space="preserve"><value>Disconnect</value></data>
+  <data name="ExternalTerminalButton.Label" xml:space="preserve"><value>Open Terminal</value></data>
+  <data name="TerminalCapabilityInfo.Message" xml:space="preserve"><value>Open Terminal launches a real interactive shell in Windows Terminal. Embedded Preview is a fallback transcript.</value></data>
+  <data name="TerminalInputLine.Header" xml:space="preserve"><value>Input</value></data>
+  <data name="ContainersExternalTerminalButtonText.Text" xml:space="preserve"><value>External</value></data>
+  <data name="ContainersStatsSnapshotInfo.Message" xml:space="preserve"><value>Current wslc stats snapshots are shown here; historical charts can be added later.</value></data>
+  <data name="ImagesTitle.Text" xml:space="preserve"><value>Images</value></data>
+  <data name="ImagesSubtitle.Text" xml:space="preserve"><value>Pull, tag, inspect, run, delete, and prune WSLC images.</value></data>
+  <data name="ImagesLoadFailedInfo.Title" xml:space="preserve"><value>Image load failed</value></data>
+  <data name="ImagesPullButtonText.Text" xml:space="preserve"><value>Pull Image</value></data>
+  <data name="ImagesSearchBox.PlaceholderText" xml:space="preserve"><value>Filter...</value></data>
+  <data name="ColumnInUse.Text" xml:space="preserve"><value>IN USE</value></data>
+  <data name="ImagesInfo.Title" xml:space="preserve"><value>WSLC images</value></data>
+  <data name="ImagesReferenceInput.Header" xml:space="preserve"><value>Image reference</value></data>
+  <data name="ImagesPullTasksTitle.Text" xml:space="preserve"><value>Pull tasks</value></data>
+  <data name="ImagesEmptyInfo.Title" xml:space="preserve"><value>No images</value></data>
+  <data name="ImagesEmptyInfo.Message" xml:space="preserve"><value>Pull an image with wslc to populate this list.</value></data>
+  <data name="VolumesTitle.Text" xml:space="preserve"><value>Volumes</value></data>
+  <data name="VolumesSubtitle.Text" xml:space="preserve"><value>Track named volumes, bind mounts, usage, and safe cleanup.</value></data>
+  <data name="VolumesLoadFailedInfo.Title" xml:space="preserve"><value>Volume load failed</value></data>
+  <data name="VolumesNewButtonText.Text" xml:space="preserve"><value>New Volume</value></data>
+  <data name="VolumesSearchBox.PlaceholderText" xml:space="preserve"><value>Filter...</value></data>
+  <data name="VolumesTrackedInfo.Title" xml:space="preserve"><value>Tracked mounts</value></data>
+  <data name="VolumesEmptyInfo.Title" xml:space="preserve"><value>No mounts</value></data>
+  <data name="VolumesEmptyInfo.Message" xml:space="preserve"><value>Create a container with a mount mapping such as C:\data=&gt;/data to populate this view.</value></data>
+  <data name="VolumeNameInput.Header" xml:space="preserve"><value>Name</value></data>
+  <data name="VolumeSizeInput.Header" xml:space="preserve"><value>Size MB</value></data>
+  <data name="ColumnDriver.Text" xml:space="preserve"><value>DRIVER</value></data>
+  <data name="NetworksTitle.Text" xml:space="preserve"><value>Networks</value></data>
+  <data name="NetworksSubtitle.Text" xml:space="preserve"><value>Inspect published ports, localhost endpoints, and conflicts.</value></data>
+  <data name="NetworksLoadFailedInfo.Title" xml:space="preserve"><value>Network load failed</value></data>
+  <data name="NetworksSearchBox.PlaceholderText" xml:space="preserve"><value>Filter...</value></data>
+  <data name="NetworksNewButtonText.Text" xml:space="preserve"><value>New Network</value></data>
+  <data name="NetworksPublishedPortsHeading.Text" xml:space="preserve"><value>Published Ports</value></data>
+  <data name="NetworksPublishedPortsInfo.Title" xml:space="preserve"><value>Published ports</value></data>
+  <data name="NetworksEmptyInfo.Title" xml:space="preserve"><value>No published ports</value></data>
+  <data name="NetworksEmptyInfo.Message" xml:space="preserve"><value>Published port data appears after containers are created with port mappings.</value></data>
+  <data name="ColumnContainer.Text" xml:space="preserve"><value>CONTAINER</value></data>
+  <data name="ColumnHostPort.Text" xml:space="preserve"><value>HOST PORT</value></data>
+  <data name="ColumnContainerPort.Text" xml:space="preserve"><value>CONTAINER PORT</value></data>
+  <data name="ColumnProtocol.Text" xml:space="preserve"><value>PROTOCOL</value></data>
+  <data name="ColumnUrl.Text" xml:space="preserve"><value>URL</value></data>
+  <data name="NetworksFutureHeading.Text" xml:space="preserve"><value>Future Integrations</value></data>
+  <data name="NetworksFutureDns.Text" xml:space="preserve"><value>Local DNS aliases</value></data>
+  <data name="NetworksFutureHttps.Text" xml:space="preserve"><value>HTTPS with explicit local CA consent</value></data>
+  <data name="NetworksFuturePortEditor.Text" xml:space="preserve"><value>Port forwarding rule editor</value></data>
+  <data name="ComposeTitle.Text" xml:space="preserve"><value>Compose</value></data>
+  <data name="ComposeSubtitle.Text" xml:space="preserve"><value>Open a compose file, preview service plans, then create WSLC containers.</value></data>
+  <data name="ComposeLoadFailedInfo.Title" xml:space="preserve"><value>Compose load failed</value></data>
+  <data name="ComposeSearchBox.PlaceholderText" xml:space="preserve"><value>Filter...</value></data>
+  <data name="ComposeOpenButtonText.Text" xml:space="preserve"><value>Open Compose</value></data>
+  <data name="ComposeCreateStartButtonText.Text" xml:space="preserve"><value>Create &amp; Start</value></data>
+  <data name="ComposePreviewInfo.Title" xml:space="preserve"><value>Compose preview</value></data>
+  <data name="ComposeEmptyInfo.Title" xml:space="preserve"><value>No compose plan</value></data>
+  <data name="ComposeEmptyInfo.Message" xml:space="preserve"><value>Open a compose.yaml or compose.yml file to generate a service plan.</value></data>
+  <data name="ComposeSelectedFileInput.Header" xml:space="preserve"><value>Selected file</value></data>
+  <data name="ComposeProjectsHeading.Text" xml:space="preserve"><value>Projects</value></data>
+  <data name="ComposeGeneratedPlanHeading.Text" xml:space="preserve"><value>Generated Plan</value></data>
+  <data name="ColumnService.Text" xml:space="preserve"><value>SERVICE</value></data>
+  <data name="ColumnMounts.Text" xml:space="preserve"><value>MOUNTS</value></data>
+  <data name="ComposeUnsupportedRun.Text" xml:space="preserve"><value> · unsupported: </value></data>
+  <data name="SettingsTitle.Text" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsSubtitle.Text" xml:space="preserve"><value>Configure app storage, language, diagnostics, and terminal behavior.</value></data>
+  <data name="SettingsFailedInfo.Title" xml:space="preserve"><value>Settings failed</value></data>
+  <data name="SettingsSessionHeading.Text" xml:space="preserve"><value>Application</value></data>
+  <data name="SettingsInfo.Title" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsDataRoot.Header" xml:space="preserve"><value>App data root</value></data>
+  <data name="SettingsLanguage.Header" xml:space="preserve"><value>Language</value></data>
+  <data name="SettingsLanguageSystem.Content" xml:space="preserve"><value>System</value></data>
+  <data name="SettingsLaunchAtLogin.Header" xml:space="preserve"><value>Launch at sign-in</value></data>
+  <data name="SettingsCliToolsHeading.Text" xml:space="preserve"><value>CLI tools</value></data>
+  <data name="SettingsCliToolsDescription.Text" xml:space="preserve"><value>Install Docker CLI helpers used by external docker and docker compose commands.</value></data>
+  <data name="SettingsCliToolsStatusInfo.Title" xml:space="preserve"><value>CLI tools status</value></data>
+  <data name="SettingsCliToolsBinLabel.Text" xml:space="preserve"><value>Install directory</value></data>
+  <data name="SettingsCliToolsRefreshText.Text" xml:space="preserve"><value>Refresh</value></data>
+  <data name="SettingsCliToolsManageText.Text" xml:space="preserve"><value>Install / Manage CLI tools</value></data>
+  <data name="SettingsCliToolsDockerContextText.Text" xml:space="preserve"><value>Use WSLC Desktop Docker context</value></data>
+  <data name="SettingsCliToolsInstallDockerText.Text" xml:space="preserve"><value>Install Docker CLI</value></data>
+  <data name="SettingsCliToolsInstallDockerZipText.Text" xml:space="preserve"><value>Install Docker ZIP</value></data>
+  <data name="SettingsCliToolsInstallComposeText.Text" xml:space="preserve"><value>Install Compose</value></data>
+  <data name="SettingsCliToolsInstallComposeExeText.Text" xml:space="preserve"><value>Select Compose EXE</value></data>
+  <data name="SettingsCliToolsAddPathText.Text" xml:space="preserve"><value>Add user PATH</value></data>
+  <data name="SettingsCliToolsAddSystemPathText.Text" xml:space="preserve"><value>Add system PATH</value></data>
+  <data name="SettingsRuntimeProviderHeading.Text" xml:space="preserve"><value>Runtime provider</value></data>
+  <data name="SettingsRuntimeProvider.Header" xml:space="preserve"><value>Provider</value></data>
+  <data name="SettingsRuntimeProviderWslcCli.Content" xml:space="preserve"><value>WSLC CLI</value></data>
+  <data name="SettingsRuntimeProviderDockerApi.Content" xml:space="preserve"><value>Docker API</value></data>
+  <data name="SettingsWslcSpecialDescription.Text" xml:space="preserve"><value>WSLC CLI commands inherit these proxy, mirror, and environment settings through the daemon process.</value></data>
+  <data name="SettingsWslcHttpProxy.Header" xml:space="preserve"><value>HTTP proxy</value></data>
+  <data name="SettingsWslcHttpProxy.PlaceholderText" xml:space="preserve"><value>http://127.0.0.1:7890</value></data>
+  <data name="SettingsWslcHttpsProxy.Header" xml:space="preserve"><value>HTTPS proxy</value></data>
+  <data name="SettingsWslcHttpsProxy.PlaceholderText" xml:space="preserve"><value>http://127.0.0.1:7890</value></data>
+  <data name="SettingsWslcNoProxy.Header" xml:space="preserve"><value>NO_PROXY</value></data>
+  <data name="SettingsWslcNoProxy.PlaceholderText" xml:space="preserve"><value>localhost,127.0.0.1,.local</value></data>
+  <data name="SettingsWslcImageMirror.Header" xml:space="preserve"><value>Image mirror</value></data>
+  <data name="SettingsWslcImageMirror.PlaceholderText" xml:space="preserve"><value>registry.example.com/library</value></data>
+  <data name="SettingsWslcRewriteImageTag.Header" xml:space="preserve"><value>Rename image tag after pull</value></data>
+  <data name="SettingsWslcRemoveRewrittenSourceTag.Header" xml:space="preserve"><value>Delete original tag after rename</value></data>
+  <data name="SettingsWslcEnvironment.Header" xml:space="preserve"><value>Execution environment</value></data>
+  <data name="SettingsWslcEnvironment.PlaceholderText" xml:space="preserve"><value>KEY=value</value></data>
+  <data name="SettingsDockerConfigDescription.Text" xml:space="preserve"><value>Docker API provider settings are managed by Docker-compatible engines outside WSLC Desktop.</value></data>
+  <data name="SettingsDockerApiHost.Header" xml:space="preserve"><value>Docker API host</value></data>
+  <data name="SettingsDockerApiHost.PlaceholderText" xml:space="preserve"><value>npipe:////./pipe/docker_engine</value></data>
+  <data name="SettingsAllowTcpDockerApi.Header" xml:space="preserve"><value>Allow TCP Docker API host</value></data>
+  <data name="SettingsOpenDockerConfigText.Text" xml:space="preserve"><value>Open Docker config</value></data>
+  <data name="SettingsProviderPreviewInfo.Title" xml:space="preserve"><value>Provider preview</value></data>
+  <data name="SettingsTestProviderButtonText.Text" xml:space="preserve"><value>Test Provider</value></data>
+  <data name="SettingsTerminalHeading.Text" xml:space="preserve"><value>Terminal</value></data>
+  <data name="SettingsDefaultShell.Header" xml:space="preserve"><value>Default shell</value></data>
+  <data name="SettingsExternalTerminal.Header" xml:space="preserve"><value>Open external Windows Terminal when available</value></data>
+  <data name="SettingsSaveButtonText.Text" xml:space="preserve"><value>Save Settings</value></data>
+  <data name="SettingsDiagnosticsHeading.Text" xml:space="preserve"><value>Diagnostics</value></data>
+  <data name="SettingsDiagnosticsDescription.Text" xml:space="preserve"><value>Export host readiness, settings, recent operations, compose projects, volumes, and published ports.</value></data>
+  <data name="SettingsExportDiagnosticsText.Text" xml:space="preserve"><value>Export Diagnostics</value></data>
+  <data name="SettingsDaemonHeading.Text" xml:space="preserve"><value>Daemon management</value></data>
+  <data name="SettingsDaemonDescription.Text" xml:space="preserve"><value>Start, restart, or stop the local wslcd-desktop daemon used by the app and Docker-compatible pipe.</value></data>
+  <data name="SettingsDaemonStatusInfo.Title" xml:space="preserve"><value>Daemon status</value></data>
+  <data name="SettingsStartDaemonText.Text" xml:space="preserve"><value>Start wslcd-desktop</value></data>
+  <data name="SettingsRestartDaemonText.Text" xml:space="preserve"><value>Restart wslcd-desktop</value></data>
+  <data name="SettingsStopDaemonText.Text" xml:space="preserve"><value>Stop wslcd-desktop</value></data>
+  <data name="DaemonStartDialogTitle" xml:space="preserve"><value>Start wslcd-desktop?</value></data>
+  <data name="DaemonStartDialogContent" xml:space="preserve"><value>These settings apply when wslcd-desktop starts. Start the daemon now?</value></data>
+  <data name="DaemonRestartDialogTitle" xml:space="preserve"><value>Restart wslcd-desktop?</value></data>
+  <data name="DaemonRestartDialogContent" xml:space="preserve"><value>This stops existing daemon processes and starts a fresh wslcd-desktop instance. Active Docker CLI calls may be interrupted.</value></data>
+  <data name="DaemonStopDialogTitle" xml:space="preserve"><value>Stop wslcd-desktop?</value></data>
+  <data name="DaemonStopDialogContent" xml:space="preserve"><value>This stops existing daemon processes and leaves the daemon offline until you start it again or another app workflow starts it.</value></data>
+</root>

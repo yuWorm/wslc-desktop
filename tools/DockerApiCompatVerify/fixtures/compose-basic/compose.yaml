@@ -1,0 +1,27 @@
+services:
+  worker:
+    image: ubuntu
+    command: ["sh", "-c", "echo phase17-worker && sleep 30"]
+    environment:
+      PHASE17_ENV: compose
+    labels:
+      com.wslc.desktop.verify: phase17
+      com.wslc.desktop.role: worker
+    ports:
+      - "18080:8080"
+    volumes:
+      - phase17-data:/data
+    depends_on:
+      - sidecar
+    network_mode: default
+
+  sidecar:
+    image: hello-world
+    command: []
+    labels:
+      com.wslc.desktop.verify: phase17
+      com.wslc.desktop.role: sidecar
+    network_mode: default
+
+volumes:
+  phase17-data:

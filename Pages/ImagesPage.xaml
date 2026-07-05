@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="wslc_desktop.Pages.ImagesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Padding="18,14,18,18" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Spacing="2" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock x:Uid="ImagesTitle" Style="{StaticResource TitleTextBlockStyle}" Text="Images" />
+                    <ProgressRing Height="18" IsActive="{Binding IsLoading}" Width="18" />
+                    <ProgressRing Height="18" IsActive="{Binding IsPulling}" Width="18" />
+                </StackPanel>
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding ImageSummaryText}" />
+            </StackPanel>
+
+            <TextBox
+                x:Uid="ImagesSearchBox"
+                AutomationProperties.AutomationId="TxtImagesSearch"
+                Grid.Column="1"
+                PlaceholderText="Filter..."
+                Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                VerticalAlignment="Center" />
+
+            <Button
+                x:Uid="ImagesPullButton"
+                AutomationProperties.AutomationId="BtnImagesPullDialog"
+                Grid.Column="2"
+                Click="PullImage_Click"
+                VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontSize="14" Glyph="&#xE896;" />
+                    <TextBlock x:Uid="ImagesPullButtonText" Text="Pull Image" />
+                </StackPanel>
+            </Button>
+
+            <Button
+                x:Uid="RefreshButton"
+                AutomationProperties.AutomationId="BtnImagesRefresh"
+                Grid.Column="3"
+                Command="{Binding RefreshCommand}"
+                VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                    <TextBlock x:Uid="RefreshButtonText" Text="Refresh" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <InfoBar
+            x:Uid="ImagesLoadFailedInfo"
+            Grid.Row="1"
+            IsOpen="{Binding HasError}"
+            Message="{Binding ErrorMessage}"
+            Severity="Error"
+            Title="Image load failed" />
+
+        <Border Grid.Row="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <InfoBar
+                    x:Uid="ImagesEmptyInfo"
+                    Grid.Row="0"
+                    IsOpen="{Binding IsEmpty}"
+                    Message="Pull an image with wslc to populate this list."
+                    Severity="Informational"
+                    Title="No images" />
+
+                <Grid Grid.Row="1" Padding="16,10" ColumnSpacing="12" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2.4*" />
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="120" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Uid="ColumnRepository" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="REPOSITORY" />
+                    <TextBlock x:Uid="ColumnImageId" Grid.Column="1" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="IMAGE ID" />
+                    <TextBlock x:Uid="ColumnSize" Grid.Column="2" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="SIZE" />
+                    <TextBlock x:Uid="ColumnCreated" Grid.Column="3" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="CREATED" />
+                    <TextBlock x:Uid="ColumnInUse" Grid.Column="4" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="IN USE" />
+                    <TextBlock x:Uid="ColumnActions" Grid.Column="5" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="ACTIONS" />
+                </Grid>
+
+                <ListView
+                    x:Name="ImagesList"
+                    AutomationProperties.AutomationId="LstImages"
+                    Grid.Row="2"
+                    ItemsSource="{Binding VisibleImages}"
+                    SelectedItem="{Binding SelectedImage, Mode=TwoWay}"
+                    SelectionMode="Single">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid MinHeight="62" Padding="14,8" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2.4*" />
+                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="120" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <Border Width="34" Height="34" Background="{ThemeResource SystemAccentColor}" Opacity="0.85" CornerRadius="8">
+                                        <FontIcon FontSize="17" Glyph="&#xE8B7;" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                                    </Border>
+                                    <StackPanel MinWidth="0" Spacing="2">
+                                        <StackPanel Orientation="Horizontal" Spacing="0">
+                                            <TextBlock FontWeight="SemiBold" Text="{Binding Repository}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text=":" />
+                                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding Tag}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding Id}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="1" FontFamily="Cascadia Mono" Text="{Binding Id}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="{Binding Size}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="3" Text="{Binding Created}" VerticalAlignment="Center" />
+
+                                <Border Grid.Column="4" Background="{ThemeResource ControlFillColorDefaultBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="10" HorizontalAlignment="Left" Padding="8,3" VerticalAlignment="Center">
+                                    <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding UsageText}" />
+                                </Border>
+
+                                <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <Button IsEnabled="False" Padding="8,4">
+                                        <FontIcon FontSize="12" Glyph="&#xE768;" />
+                                    </Button>
+                                    <Button IsEnabled="False" Padding="8,4">
+                                        <FontIcon FontSize="12" Glyph="&#xE946;" />
+                                    </Button>
+                                    <Button Click="DeleteImage_Click" Padding="8,4">
+                                        <FontIcon FontSize="12" Glyph="&#xE74D;" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <Border Grid.Row="3" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" Padding="16,10,16,12">
+                    <Grid RowSpacing="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock x:Uid="ImagesPullTasksTitle" FontWeight="SemiBold" Text="Pull tasks" />
+                            <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding PullProgressText}" TextTrimming="CharacterEllipsis" />
+                        </Grid>
+
+                        <ListView
+                            AutomationProperties.AutomationId="LstImagePullTasks"
+                            Grid.Row="1"
+                            ItemsSource="{Binding PullTasks}"
+                            MaxHeight="190"
+                            SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid MinHeight="58" Padding="0,8" ColumnSpacing="12" RowSpacing="6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="110" />
+                                            <ColumnDefinition Width="72" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <StackPanel MinWidth="0" Spacing="2">
+                                            <TextBlock FontWeight="SemiBold" Text="{Binding Reference}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding DetailText}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="1" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2" FontFamily="Cascadia Mono" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding StartedText}" VerticalAlignment="Center" />
+
+                                        <ProgressBar
+                                            Grid.Row="1"
+                                            Grid.ColumnSpan="3"
+                                            IsIndeterminate="{Binding IsIndeterminate}"
+                                            Maximum="100"
+                                            ShowError="{Binding IsFailed}"
+                                            Value="{Binding ProgressValue}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>
