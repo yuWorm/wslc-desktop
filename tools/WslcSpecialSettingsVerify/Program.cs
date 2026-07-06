@@ -32,6 +32,8 @@ AssertEqual(false, settings.Environment.ContainsKey("HTTP_PROXY"), "proxy env re
 
 AssertEqual("mirror.local/library/ubuntu:latest", WslcImageReferencePolicy.ApplyMirror("ubuntu:latest", settings), "mirror bare image");
 AssertEqual("mirror.local/library/library/nginx:alpine", WslcImageReferencePolicy.ApplyMirror("library/nginx:alpine", settings), "mirror namespace image");
+AssertEqual("mirror.local/library/library/nginx:alpine", WslcImageReferencePolicy.ApplyMirror("docker.io/library/nginx:alpine", settings), "mirror docker hub qualified image");
+AssertEqual("mirror.local/library/library/hello-world:latest", WslcImageReferencePolicy.ApplyMirror("registry-1.docker.io/library/hello-world:latest", settings), "mirror docker hub registry image");
 AssertEqual("ghcr.io/acme/app:1", WslcImageReferencePolicy.ApplyMirror("ghcr.io/acme/app:1", settings), "keep qualified image");
 AssertEqual("acme/app:1", WslcImageReferencePolicy.GetRewriteTarget("ghcr.io/acme/app:1", settings), "strip registry host");
 AssertEqual("", WslcImageReferencePolicy.GetRewriteTarget("ubuntu:latest", settings), "do not rewrite docker hub image");

@@ -120,6 +120,19 @@ public sealed record ImagePullProgressDto(
     }
 }
 
+public sealed record ImagePullTaskDto(
+    string TaskId,
+    string Reference,
+    string Source,
+    string State,
+    DateTimeOffset StartedAt,
+    DateTimeOffset? CompletedAt,
+    string ProgressId,
+    string Status,
+    ulong CurrentBytes,
+    ulong TotalBytes,
+    string ErrorMessage);
+
 public sealed record VolumeSummaryDto(
     string Name,
     string Size,

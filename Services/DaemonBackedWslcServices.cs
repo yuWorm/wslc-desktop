@@ -162,6 +162,13 @@ public sealed class DaemonWslcImageService : IWslcImageService
         return images.Select(MapImage).ToArray();
     }
 
+    public async Task<IReadOnlyList<AppModels.ImagePullTaskSnapshot>> ListPullTasksAsync(CancellationToken cancellationToken = default)
+    {
+        await _daemon.EnsureRunningAsync(cancellationToken);
+        var tasks = await _client.ListImagePullTasksAsync(cancellationToken);
+        return tasks.Select(MapPullTask).ToArray();
+    }
+
     public async IAsyncEnumerable<AppModels.ImagePullProgress> PullImageAsync(
         AppModels.ImagePullRequest request,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -201,6 +208,22 @@ public sealed class DaemonWslcImageService : IWslcImageService
     {
         return new AppModels.ImageSummary(image.Id, image.Repository, image.Tag, image.Size, image.Created, image.IsInUse);
     }
+
+    private static AppModels.ImagePullTaskSnapshot MapPullTask(Contracts.ImagePullTaskDto task)
+    {
+        return new AppModels.ImagePullTaskSnapshot(
+            task.TaskId,
+            task.Reference,
+            task.Source,
+            task.State,
+            task.StartedAt,
+            task.CompletedAt,
+            task.ProgressId,
+            task.Status,
+            task.CurrentBytes,
+            task.TotalBytes,
+            task.ErrorMessage);
+    }
 }
 
 public sealed class DaemonWslcContainerService : IWslcContainerService
@@ -231,7 +254,8 @@ public sealed class DaemonWslcContainerService : IWslcContainerService
             request.Ports.Select(port => new Contracts.PortMappingDto(port.HostPort, port.ContainerPort, port.Protocol)).ToArray(),
             request.Mounts.Select(mount => new Contracts.ContainerMountDto(mount.Source, mount.Target, mount.IsReadOnly, mount.IsNamedVolume)).ToArray(),
             request.Environment,
-            request.AutoRemove), cancellationToken);
+            request.AutoRemove,
+            request.Labels), cancellationToken);
 
         try
         {
@@ -250,7 +274,8 @@ public sealed class DaemonWslcContainerService : IWslcContainerService
                 "Created",
                 request.Ports.Count == 0 ? "-" : string.Join(", ", request.Ports.Select(port => $"{port.HostPort}->{port.ContainerPort}/{port.Protocol}")),
                 request.Command.Count == 0 ? "(image default)" : string.Join(" ", request.Command),
-                string.Empty);
+                string.Empty,
+                request.Labels);
         }
     }
 
@@ -291,7 +316,8 @@ public sealed class DaemonWslcContainerService : IWslcContainerService
             container.Uptime,
             container.PortSummary,
             container.Command,
-            container.InspectJson);
+            container.InspectJson,
+            container.Labels);
     }
 
     private static AppModels.ContainerRuntimeState MapState(Contracts.ContainerRuntimeState state)

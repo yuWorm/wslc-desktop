@@ -92,7 +92,8 @@ public sealed record ContainerSummary(
     string Uptime,
     string PortSummary,
     string Command,
-    string InspectJson = "");
+    string InspectJson = "",
+    IReadOnlyDictionary<string, string>? Labels = null);
 
 public sealed record ContainerCreateRequest(
     string Name,
@@ -102,7 +103,44 @@ public sealed record ContainerCreateRequest(
     IReadOnlyList<ContainerMount> Mounts,
     IReadOnlyDictionary<string, string> Environment,
     bool EnableGpu,
-    bool AutoRemove);
+    bool AutoRemove,
+    IReadOnlyDictionary<string, string>? Labels = null);
+
+public sealed record ContainerCreateDraft(
+    string Name,
+    string Image,
+    string Command,
+    string Ports,
+    string Mounts,
+    string Environment)
+{
+    public static ContainerCreateDraft Default()
+    {
+        return new ContainerCreateDraft("web", "alpine:latest", "/bin/sleep infinity", string.Empty, string.Empty, string.Empty);
+    }
+
+    public static ContainerCreateDraft FromImage(ImageSummary image)
+    {
+        return new ContainerCreateDraft(string.Empty, ToImageReference(image), string.Empty, string.Empty, string.Empty, string.Empty);
+    }
+
+    private static string ToImageReference(ImageSummary image)
+    {
+        string repository = image.Repository.Trim();
+        string tag = image.Tag.Trim();
+        if (string.IsNullOrWhiteSpace(repository) || repository.Equals("<none>", StringComparison.OrdinalIgnoreCase))
+        {
+            return image.Id.Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(tag) || tag.Equals("<none>", StringComparison.OrdinalIgnoreCase))
+        {
+            return repository;
+        }
+
+        return $"{repository}:{tag}";
+    }
+}
 
 public sealed record PortMapping(
     int HostPort,
@@ -153,6 +191,19 @@ public sealed record ImagePullProgress(
     public bool HasByteProgress => Kind == ImagePullProgressKind.Progress && TotalBytes > 0;
 }
 
+public sealed record ImagePullTaskSnapshot(
+    string TaskId,
+    string Reference,
+    string Source,
+    string State,
+    DateTimeOffset StartedAt,
+    DateTimeOffset? CompletedAt,
+    string ProgressId,
+    string Status,
+    ulong CurrentBytes,
+    ulong TotalBytes,
+    string ErrorMessage);
+
 public sealed record VolumeSummary(
     string Name,
     string Size,
@@ -186,6 +237,49 @@ public sealed record ComposeProjectSummary(
         ? $"{RunningCount} 个运行中 / {ServiceCount} 个服务"
         : $"{RunningCount} running / {ServiceCount} services";
 }
+
+public sealed record ComposeProjectDetails(
+    ComposeProjectSummary Project,
+    IReadOnlyList<ComposeServiceRuntimeSummary> Services,
+    IReadOnlyList<ComposeContainerRuntimeSummary> Containers)
+{
+    public int ContainerCount => Containers.Count;
+}
+
+public sealed record ComposeServiceRuntimeSummary(
+    string ProjectName,
+    string ServiceName,
+    string Image,
+    int ContainerCount,
+    int RunningCount,
+    string PortSummary,
+    string StateSummary)
+{
+    public string StatusText => System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh"
+        ? $"{RunningCount} 个运行中 / {ContainerCount} 个容器"
+        : $"{RunningCount} running / {ContainerCount} containers";
+}
+
+public sealed record ComposeContainerRuntimeSummary(
+    string ProjectName,
+    string ServiceName,
+    string Id,
+    string Name,
+    string Image,
+    ContainerRuntimeState State,
+    double CpuPercent,
+    string MemoryUsed,
+    string Created,
+    string Uptime,
+    string PortSummary)
+{
+    public bool IsRunning => State == ContainerRuntimeState.Running;
+
+    public string StateText => State.ToString();
+
+    public string CpuText => $"{CpuPercent:0.0}%";
+}
+
 public sealed record ComposeServicePlan(
     string ProjectName,
     string ServiceName,

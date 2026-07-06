@@ -26,6 +26,8 @@ public interface IWslcdNativeClient
 
     Task<IReadOnlyList<ImageSummaryDto>> ListImagesAsync(CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<ImagePullTaskDto>> ListImagePullTasksAsync(CancellationToken cancellationToken = default);
+
     IAsyncEnumerable<ImagePullProgressDto> PullImageProgressAsync(ImagePullRequest request, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ImagePullProgressDto>> PullImageAsync(ImagePullRequest request, CancellationToken cancellationToken = default);

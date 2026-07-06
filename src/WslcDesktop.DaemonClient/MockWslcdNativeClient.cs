@@ -55,6 +55,7 @@ public sealed class MockWslcdNativeClient : IWslcdNativeClient
     ];
 
     private readonly List<OperationRecordDto> _operations = [];
+    private readonly List<ImagePullTaskDto> _pullTasks = [];
 
     public Task<WslcdHealthResponse> GetHealthAsync(CancellationToken cancellationToken = default)
     {
@@ -149,8 +150,27 @@ public sealed class MockWslcdNativeClient : IWslcdNativeClient
         return Task.FromResult<IReadOnlyList<ImageSummaryDto>>(_images.ToArray());
     }
 
+    public Task<IReadOnlyList<ImagePullTaskDto>> ListImagePullTasksAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<ImagePullTaskDto>>(_pullTasks.OrderByDescending(task => task.StartedAt).ToArray());
+    }
+
     public Task<IReadOnlyList<ImagePullProgressDto>> PullImageAsync(ImagePullRequest request, CancellationToken cancellationToken = default)
     {
+        string taskId = Guid.NewGuid().ToString("N");
+        DateTimeOffset startedAt = DateTimeOffset.UtcNow;
+        _pullTasks.Add(new ImagePullTaskDto(
+            taskId,
+            request.Reference,
+            "mock",
+            "Succeeded",
+            startedAt,
+            DateTimeOffset.UtcNow,
+            request.Reference,
+            "Completed",
+            1,
+            1,
+            string.Empty));
         _images.Add(new ImageSummaryDto(request.Reference, request.Reference, "latest", "mock", "mock", false));
         return Task.FromResult<IReadOnlyList<ImagePullProgressDto>>(
         [

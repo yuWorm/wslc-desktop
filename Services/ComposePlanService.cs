@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using wslc_desktop.Models;
 using YamlDotNet.RepresentationModel;
@@ -33,10 +36,62 @@ public sealed class ComposePlanService : IComposePlanService
         _operationTracker = operationTracker;
     }
 
-    public Task<IReadOnlyList<ComposeProjectSummary>> ListProjectsAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ComposeProjectSummary>> ListProjectsAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IReadOnlyList<ComposeProjectSummary>>(
-            _projects.Values.OrderBy(project => project.Name, StringComparer.OrdinalIgnoreCase).ToArray());
+        var projects = await DiscoverRuntimeProjectsAsync(cancellationToken);
+        foreach (var tracked in _projects.Values)
+        {
+            projects.TryAdd(tracked.Name, tracked);
+        }
+
+        return projects.Values.OrderBy(project => project.Name, StringComparer.OrdinalIgnoreCase).ToArray();
+    }
+
+    public async Task<ComposeProjectDetails> InspectProjectAsync(string projectName, CancellationToken cancellationToken = default)
+    {
+        var containers = await ListProjectContainersAsync(projectName, cancellationToken);
+        var project = BuildProjectSummary(projectName, containers);
+        var services = containers
+            .GroupBy(container => GetComposeServiceName(container), StringComparer.OrdinalIgnoreCase)
+            .Select(group =>
+            {
+                var serviceContainers = group.ToArray();
+                string image = serviceContainers
+                    .Select(container => container.Image)
+                    .FirstOrDefault(image => !string.IsNullOrWhiteSpace(image))
+                    ?? "-";
+                string portSummary = JoinDistinct(serviceContainers.Select(container => container.PortSummary), emptyValue: "-");
+                string stateSummary = JoinDistinct(serviceContainers.Select(container => container.State.ToString()), emptyValue: "-");
+
+                return new ComposeServiceRuntimeSummary(
+                    projectName,
+                    group.Key,
+                    image,
+                    serviceContainers.Length,
+                    serviceContainers.Count(container => container.State == ContainerRuntimeState.Running),
+                    portSummary,
+                    stateSummary);
+            })
+            .OrderBy(service => service.ServiceName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var rows = containers
+            .Select(container => new ComposeContainerRuntimeSummary(
+                projectName,
+                GetComposeServiceName(container),
+                container.Id,
+                container.Name,
+                container.Image,
+                container.State,
+                container.CpuPercent,
+                container.MemoryUsed,
+                container.Created,
+                container.Uptime,
+                container.PortSummary))
+            .OrderBy(container => container.ServiceName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(container => container.Name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return new ComposeProjectDetails(project, services, rows);
     }
 
     public async Task<IReadOnlyList<ComposeServicePlan>> PreviewAsync(string composePath, CancellationToken cancellationToken = default)
@@ -91,6 +146,8 @@ public sealed class ComposePlanService : IComposePlanService
         var plans = await PreviewAsync(composePath, cancellationToken);
         var orderedPlans = OrderByDependencies(plans);
         var created = new List<ContainerSummary>();
+        string sourcePath = Path.GetFullPath(composePath);
+        string composeDirectory = Path.GetDirectoryName(sourcePath) ?? Environment.CurrentDirectory;
 
         foreach (var plan in orderedPlans)
         {
@@ -105,7 +162,8 @@ public sealed class ComposePlanService : IComposePlanService
                 plan.Mounts,
                 plan.Environment,
                 EnableGpu: false,
-                AutoRemove: false), cancellationToken);
+                AutoRemove: false,
+                BuildContainerLabels(plan, sourcePath, composeDirectory, containerNumber: 1)), cancellationToken);
 
             await _containerService.StartAsync(container.Id, cancellationToken);
             created.Add(container);
@@ -113,7 +171,6 @@ public sealed class ComposePlanService : IComposePlanService
 
         if (plans.Count > 0)
         {
-            string sourcePath = Path.GetFullPath(composePath);
             _projects[sourcePath] = new ComposeProjectSummary(
                 plans[0].ProjectName,
                 plans.Count,
@@ -129,6 +186,195 @@ public sealed class ComposePlanService : IComposePlanService
             DateTimeOffset.Now));
 
         return created;
+    }
+
+    public async Task StartProjectAsync(string projectName, CancellationToken cancellationToken = default)
+    {
+        foreach (var container in await ListProjectContainersAsync(projectName, cancellationToken))
+        {
+            if (container.State != ContainerRuntimeState.Running)
+            {
+                await _containerService.StartAsync(container.Id, cancellationToken);
+            }
+        }
+    }
+
+    public async Task StopProjectAsync(string projectName, CancellationToken cancellationToken = default)
+    {
+        foreach (var container in await ListProjectContainersAsync(projectName, cancellationToken))
+        {
+            if (container.State == ContainerRuntimeState.Running)
+            {
+                await _containerService.StopAsync(container.Id, cancellationToken);
+            }
+        }
+    }
+
+    public async Task RestartProjectAsync(string projectName, CancellationToken cancellationToken = default)
+    {
+        foreach (var container in await ListProjectContainersAsync(projectName, cancellationToken))
+        {
+            if (container.State == ContainerRuntimeState.Running)
+            {
+                await _containerService.RestartAsync(container.Id, cancellationToken);
+            }
+        }
+    }
+
+    public async Task DeleteProjectAsync(string projectName, CancellationToken cancellationToken = default)
+    {
+        foreach (var container in await ListProjectContainersAsync(projectName, cancellationToken))
+        {
+            if (container.State == ContainerRuntimeState.Running)
+            {
+                await _containerService.StopAsync(container.Id, cancellationToken);
+            }
+
+            await _containerService.DeleteAsync(container.Id, cancellationToken);
+        }
+    }
+
+    private async Task<Dictionary<string, ComposeProjectSummary>> DiscoverRuntimeProjectsAsync(CancellationToken cancellationToken)
+    {
+        var containers = await _containerService.ListContainersAsync(cancellationToken);
+        return containers
+            .Select(container => new
+            {
+                Container = container,
+                Labels = container.Labels ?? new Dictionary<string, string>()
+            })
+            .Select(item => new
+            {
+                item.Container,
+                item.Labels,
+                ProjectName = GetLabel(item.Labels, ComposeLabels.Project)
+            })
+            .Where(item => !string.IsNullOrWhiteSpace(item.ProjectName))
+            .GroupBy(item => item.ProjectName!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                group => group.Key,
+                group => BuildProjectSummary(group.Key, group.Select(item => item.Container).ToArray()),
+                StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task<IReadOnlyList<ContainerSummary>> ListProjectContainersAsync(string projectName, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(projectName))
+        {
+            throw new ArgumentException("Compose project name is required.", nameof(projectName));
+        }
+
+        var containers = await _containerService.ListContainersAsync(cancellationToken);
+        return containers
+            .Where(container => HasComposeProject(container, projectName))
+            .OrderBy(container => GetComposeServiceName(container), StringComparer.OrdinalIgnoreCase)
+            .ThenBy(container => container.Name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static ComposeProjectSummary BuildProjectSummary(string projectName, IReadOnlyCollection<ContainerSummary> containers)
+    {
+        var serviceNames = containers
+            .Select(GetComposeServiceNameOrNull)
+            .Where(service => !string.IsNullOrWhiteSpace(service))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        int serviceCount = serviceNames.Length == 0
+            ? containers.Count
+            : serviceNames.Length;
+        int runningCount = containers.Count(container => container.State == ContainerRuntimeState.Running);
+        string sourcePath = containers
+            .Select(container => GetLabel(container.Labels ?? new Dictionary<string, string>(), ComposeLabels.ProjectConfigFiles))
+            .FirstOrDefault(path => !string.IsNullOrWhiteSpace(path))
+            ?? containers
+                .Select(container => GetLabel(container.Labels ?? new Dictionary<string, string>(), ComposeLabels.ProjectWorkingDir))
+                .FirstOrDefault(path => !string.IsNullOrWhiteSpace(path))
+            ?? string.Empty;
+
+        return new ComposeProjectSummary(projectName, serviceCount, runningCount, sourcePath);
+    }
+
+    private static bool HasComposeProject(ContainerSummary container, string projectName)
+    {
+        return container.Labels is not null
+            && container.Labels.TryGetValue(ComposeLabels.Project, out string? value)
+            && value.Equals(projectName, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetComposeServiceName(ContainerSummary container)
+    {
+        return GetComposeServiceNameOrNull(container) ?? container.Name;
+    }
+
+    private static string? GetComposeServiceNameOrNull(ContainerSummary container)
+    {
+        return container.Labels is null ? null : GetLabel(container.Labels, ComposeLabels.Service);
+    }
+
+    private static string? GetLabel(IReadOnlyDictionary<string, string> labels, string key)
+    {
+        return labels.TryGetValue(key, out string? value) ? value : null;
+    }
+
+    private static string JoinDistinct(IEnumerable<string> values, string emptyValue)
+    {
+        var distinct = values
+            .Where(value => !string.IsNullOrWhiteSpace(value) && value != "-")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        return distinct.Length == 0 ? emptyValue : string.Join(", ", distinct);
+    }
+
+    private static IReadOnlyDictionary<string, string> BuildContainerLabels(
+        ComposeServicePlan plan,
+        string composePath,
+        string composeDirectory,
+        int containerNumber)
+    {
+        return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            [ComposeLabels.Project] = plan.ProjectName,
+            [ComposeLabels.Service] = plan.ServiceName,
+            [ComposeLabels.ContainerNumber] = containerNumber.ToString(CultureInfo.InvariantCulture),
+            [ComposeLabels.ConfigHash] = ComputeConfigHash(plan, composePath),
+            [ComposeLabels.ProjectWorkingDir] = composeDirectory,
+            [ComposeLabels.ProjectConfigFiles] = composePath,
+            [ComposeLabels.Oneoff] = "False",
+            [ComposeLabels.Version] = "wslc-desktop",
+            [ComposeLabels.ManagedBy] = "wslc-desktop"
+        };
+    }
+
+    private static string ComputeConfigHash(ComposeServicePlan plan, string composePath)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine(composePath);
+        builder.AppendLine(plan.ProjectName);
+        builder.AppendLine(plan.ServiceName);
+        builder.AppendLine(plan.Image);
+        builder.AppendLine(string.Join('\n', plan.Command));
+        foreach (var port in plan.Ports.OrderBy(port => port.HostPort).ThenBy(port => port.ContainerPort).ThenBy(port => port.Protocol, StringComparer.OrdinalIgnoreCase))
+        {
+            builder.AppendLine(CultureInfo.InvariantCulture, $"port:{port.HostPort}:{port.ContainerPort}:{port.Protocol}");
+        }
+
+        foreach (var mount in plan.Mounts.OrderBy(mount => mount.Source, StringComparer.OrdinalIgnoreCase).ThenBy(mount => mount.Target, StringComparer.OrdinalIgnoreCase))
+        {
+            builder.AppendLine(CultureInfo.InvariantCulture, $"mount:{mount.Source}:{mount.Target}:{mount.IsReadOnly}:{mount.IsNamedVolume}");
+        }
+
+        foreach (var pair in plan.Environment.OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            builder.AppendLine(CultureInfo.InvariantCulture, $"env:{pair.Key}={pair.Value}");
+        }
+
+        foreach (string dependency in plan.DependsOn.OrderBy(dependency => dependency, StringComparer.OrdinalIgnoreCase))
+        {
+            builder.AppendLine(CultureInfo.InvariantCulture, $"depends:{dependency}");
+        }
+
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(builder.ToString()));
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     private static ComposeServicePlan ParseService(

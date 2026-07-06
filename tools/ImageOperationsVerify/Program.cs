@@ -1,5 +1,6 @@
 using WslcDesktop.Contracts;
 using WslcDesktop.Runtime.Providers.DockerApi;
+using Wslcd;
 using wslc_desktop.Models;
 using wslc_desktop.Services;
 using wslc_desktop.ViewModels;
@@ -38,6 +39,27 @@ AssertEqual(true, progressFrame.HasByteProgress, "progress frame byte progress")
 AssertEqual(25UL, progressFrame.CurrentBytes, "progress frame current");
 AssertEqual(100UL, progressFrame.TotalBytes, "progress frame total");
 
+var registry = new ImagePullTaskRegistry(retentionCount: 8);
+var daemonTask = registry.Start("docker.io/library/alpine:latest", "docker-api");
+registry.Update(daemonTask.TaskId, ImagePullProgressDto.ProgressFrame("layer-1", "Downloading", 50, 100));
+var runningTask = registry.List().Single(task => task.TaskId == daemonTask.TaskId);
+AssertEqual("Running", runningTask.State, "pull task running state");
+AssertEqual("docker-api", runningTask.Source, "pull task source");
+AssertEqual("layer-1", runningTask.ProgressId, "pull task progress id");
+AssertEqual(50UL, runningTask.CurrentBytes, "pull task current");
+AssertEqual(100UL, runningTask.TotalBytes, "pull task total");
+
+registry.Succeed(daemonTask.TaskId);
+var completedTask = registry.List().Single(task => task.TaskId == daemonTask.TaskId);
+AssertEqual("Succeeded", completedTask.State, "pull task succeeded state");
+AssertEqual(true, completedTask.CompletedAt is not null, "pull task completed timestamp");
+
+var failedDaemonTask = registry.Start("bad/image:latest", "native");
+registry.Fail(failedDaemonTask.TaskId, "network failed");
+var failedDaemonSnapshot = registry.List().Single(task => task.TaskId == failedDaemonTask.TaskId);
+AssertEqual("Failed", failedDaemonSnapshot.State, "pull task failed state");
+AssertEqual("network failed", failedDaemonSnapshot.ErrorMessage, "pull task error message");
+
 var dockerFrames = DockerImagePullProgressParser.Parse("""
 {"status":"Pulling from library/busybox","id":"latest"}
 {"status":"Downloading","progressDetail":{"current":512,"total":1024},"id":"abc123"}
@@ -65,11 +87,22 @@ AssertSequenceEqual(["ghcr.io/acme/app:1.0"], ContainerImageSuggestionProvider.F
 AssertSequenceEqual(["nginx:alpine"], ContainerImageSuggestionProvider.Filter(imageSuggestions, "ng alp"), "image suggestion token filter");
 AssertSequenceEqual(imageSuggestions, ContainerImageSuggestionProvider.Filter(imageSuggestions, ""), "image suggestion empty filter");
 
+var runDraft = ContainerCreateDraft.FromImage(new ImageSummary("sha256:run", "ghcr.io/acme/app", "1.0", "12 MB", "today", false));
+AssertEqual("ghcr.io/acme/app:1.0", runDraft.Image, "run draft image reference");
+AssertEqual("", runDraft.Name, "run draft default name");
+AssertEqual("", runDraft.Command, "run draft default command");
+
+var danglingRunDraft = ContainerCreateDraft.FromImage(new ImageSummary("sha256:dangling", "<none>", "<none>", "1 MB", "today", false));
+AssertEqual("sha256:dangling", danglingRunDraft.Image, "dangling image run draft uses id");
+
 var startedAt = new DateTimeOffset(2026, 7, 5, 8, 30, 0, TimeSpan.Zero);
 var pullTask = new ImagePullTaskViewModel("ghcr.io/acme/app:1", startedAt, "Queued");
 AssertEqual(ImagePullTaskState.Queued, pullTask.State, "initial state");
 AssertEqual(true, pullTask.IsActive, "queued is active");
 AssertEqual(true, pullTask.IsIndeterminate, "queued is indeterminate");
+
+var daemonPullTask = new ImagePullTaskViewModel("docker.io/library/alpine:latest", startedAt, "Queued", "daemon-task-1");
+AssertEqual("daemon-task-1", daemonPullTask.Id, "daemon pull task id");
 
 pullTask.UpdateProgress("Pulling", "layer: 25/100 bytes", 25, 100);
 AssertEqual(ImagePullTaskState.Pulling, pullTask.State, "pulling state");

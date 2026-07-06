@@ -60,6 +60,10 @@
                         <TextBlock x:Uid="SettingsCliToolsBinLabel" FontWeight="SemiBold" Text="Install directory" />
                         <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding CliToolsBinDirectory}" TextWrapping="WrapWholeWords" />
                     </StackPanel>
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Uid="SettingsCliToolsComposePluginLabel" FontWeight="SemiBold" Text="Compose plugin directory" />
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding CliToolsComposePluginDirectory}" TextWrapping="WrapWholeWords" />
+                    </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Button AutomationProperties.AutomationId="BtnRefreshCliTools" Click="RefreshCliTools_Click" IsEnabled="{Binding CanSaveSettings}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
@@ -90,7 +94,7 @@
                         <ComboBoxItem x:Uid="SettingsRuntimeProviderDockerApi" Content="Docker API" Tag="docker-api" />
                     </ComboBox>
                     <StackPanel Spacing="10" Visibility="{x:Bind local:SettingsPage.BoolToVisibility(ViewModel.IsWslcCliProvider), Mode=OneWay}">
-                        <TextBlock x:Uid="SettingsWslcSpecialDescription" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="WSLC CLI commands inherit these proxy, mirror, and environment settings through the daemon process." TextWrapping="WrapWholeWords" />
+                        <TextBlock x:Uid="SettingsWslcSpecialDescription" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="WSLC CLI commands inherit these proxy, image registry address, and environment settings through the daemon process." TextWrapping="WrapWholeWords" />
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -100,7 +104,7 @@
                             <TextBox x:Uid="SettingsWslcHttpsProxy" Grid.Column="1" AutomationProperties.AutomationId="TxtWslcHttpsProxy" Header="HTTPS proxy" PlaceholderText="http://127.0.0.1:7890" Text="{Binding WslcHttpsProxy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         </Grid>
                         <TextBox x:Uid="SettingsWslcNoProxy" AutomationProperties.AutomationId="TxtWslcNoProxy" Header="NO_PROXY" PlaceholderText="localhost,127.0.0.1,.local" Text="{Binding WslcNoProxy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBox x:Uid="SettingsWslcImageMirror" AutomationProperties.AutomationId="TxtWslcImageMirror" Header="Image mirror" PlaceholderText="registry.example.com/library" Text="{Binding WslcImageMirror, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox x:Uid="SettingsWslcImageMirror" AutomationProperties.AutomationId="TxtWslcImageMirror" Header="Image registry address" PlaceholderText="registry.example.com/library" Text="{Binding WslcImageMirror, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <ToggleSwitch x:Uid="SettingsWslcRewriteImageTag" AutomationProperties.AutomationId="TglWslcRewriteImageTag" Header="Rename image tag after pull" IsOn="{Binding WslcRewriteImageTag, Mode=TwoWay}" />
                         <ToggleSwitch x:Uid="SettingsWslcRemoveRewrittenSourceTag" AutomationProperties.AutomationId="TglWslcRemoveRewrittenSourceTag" Header="Delete original tag after rename" IsEnabled="{Binding CanRemoveRewrittenSourceTag}" IsOn="{Binding WslcRemoveRewrittenSourceTag, Mode=TwoWay}" />
                         <TextBox x:Uid="SettingsWslcEnvironment" AutomationProperties.AutomationId="TxtWslcEnvironment" AcceptsReturn="True" Header="Execution environment" Height="112" PlaceholderText="KEY=value" Text="{Binding WslcEnvironment, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="NoWrap" />

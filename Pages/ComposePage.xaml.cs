@@ -42,4 +42,28 @@ public sealed partial class ComposePage : Page
 
         await _viewModel.OpenComposePathAsync(file.Path);
     }
+
+    private async void DeleteProject_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        if (_viewModel.SelectedProject is null)
+        {
+            return;
+        }
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = AppServices.Strings.Get("ComposeDeleteProjectTitle"),
+            Content = AppServices.Strings.Format("ComposeDeleteProjectContent", _viewModel.SelectedProject.Name),
+            PrimaryButtonText = AppServices.Strings.Get("Delete"),
+            CloseButtonText = AppServices.Strings.Get("Cancel"),
+            DefaultButton = ContentDialogButton.Close
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            await _viewModel.DeleteSelectedProjectAsync();
+        }
+    }
 }

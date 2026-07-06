@@ -32,13 +32,13 @@ wsl --install
 If WSL is installed but `wslc.exe` is missing, update WSL:
 
 ```powershell
-wsl --update
+wsl --update --pre-release
 ```
 
 Recommended:
 
 - Docker CLI (`docker.exe`) for command-line access.
-- Docker Compose (`docker-compose.exe` or the Docker CLI plugin under `cli-plugins\docker-compose.exe`) for Compose workflows.
+- Docker Compose (`docker-compose.exe` or the Docker CLI plugin under `%DOCKER_CONFIG%\cli-plugins\docker-compose.exe`, normally `%USERPROFILE%\.docker\cli-plugins\docker-compose.exe`) for Compose workflows.
 
 Docker CLI and Compose are optional for the GUI, but required if you want to run `docker` or `docker compose` against WSLC Desktop.
 
@@ -57,7 +57,7 @@ On startup, WSLC Desktop checks the host before starting `wslcd-desktop`.
 
 1. If `wslc.exe` is available, the app starts the daemon and loads the GUI.
 2. If WSL is missing, the app shows a required dialog with `wsl --install`. This step blocks normal use.
-3. If WSL is present but `wslc.exe` is missing, the app treats it as an older WSL build and shows `wsl --update`. This step also blocks normal use.
+3. If WSL is present but `wslc.exe` is missing, the app treats it as an older WSL build and shows `wsl --update --pre-release`. This step also blocks normal use.
 4. If Docker CLI is missing, the app shows an optional dialog. You can dismiss it and keep using the GUI.
 
 To install Docker CLI helpers later, open `Settings -> CLI tools`.
@@ -68,7 +68,7 @@ The installer can:
 - Import a Docker CLI zip manually when the network is unreliable.
 - Download the latest Docker Compose release from GitHub.
 - Import a local Compose executable manually.
-- Install Compose as both `bin\docker-compose.exe` and `bin\cli-plugins\docker-compose.exe`.
+- Install Compose as both the standalone helper in the app tool `bin\docker-compose.exe` and the Docker CLI plugin in `%DOCKER_CONFIG%\cli-plugins\docker-compose.exe` (or `%USERPROFILE%\.docker\cli-plugins\docker-compose.exe` when `DOCKER_CONFIG` is not set).
 - Add the tool `bin` directory to the user PATH or the system PATH.
 
 ## Using the GUI
@@ -80,7 +80,7 @@ The main pages are:
 - Volumes: list, create, and remove named data volumes.
 - Networks: inspect published container ports and open endpoint URLs.
 - Compose: open a Compose file, preview service plans, create and start services.
-- Settings: configure runtime provider, WSLC proxy and mirror settings, Docker API backend settings, daemon controls, CLI tool installation, startup behavior, language, and diagnostics.
+- Settings: configure runtime provider, WSLC proxy and image registry address settings, Docker API backend settings, daemon controls, CLI tool installation, startup behavior, language, and diagnostics.
 
 Daemon controls are available in Settings and in the title-bar runtime status flyout. The system tray also exposes quick actions. Closing the window hides the app to the tray; choosing Exit from the tray exits the UI and stops `wslcd-desktop`.
 
@@ -187,7 +187,7 @@ Important notes for the WSLC backend:
 Run:
 
 ```powershell
-wsl --update
+wsl --update --pre-release
 ```
 
 If WSL itself is missing, run:
@@ -228,7 +228,7 @@ Use `network_mode: default` in each service or remove user-defined `networks` fr
 
 ### A runtime setting changed but behavior did not update
 
-Restart `wslcd-desktop` from Settings or from the title-bar runtime status flyout. Proxy, image mirror, runtime provider, and Docker API backend settings are applied when the daemon starts.
+Restart `wslcd-desktop` from Settings or from the title-bar runtime status flyout. Proxy, image registry address, runtime provider, and Docker API backend settings are applied when the daemon starts.
 
 ### Need logs or diagnostics
 

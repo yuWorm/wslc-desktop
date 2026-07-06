@@ -28,6 +28,13 @@ internal static class CliToolsInstallDialog
             TextWrapping = TextWrapping.WrapWholeWords
         };
 
+        var composePluginDirectory = new TextBlock
+        {
+            Text = cliToolInstallationService.ComposePluginDirectory,
+            Foreground = Application.Current.Resources["TextFillColorSecondaryBrush"] as Microsoft.UI.Xaml.Media.Brush,
+            TextWrapping = TextWrapping.WrapWholeWords
+        };
+
         var progress = new ProgressRing
         {
             Height = 20,
@@ -170,6 +177,12 @@ internal static class CliToolsInstallDialog
         content.Children.Add(statusInfo);
         content.Children.Add(titleRow);
         content.Children.Add(installDirectory);
+        content.Children.Add(new TextBlock
+        {
+            Text = AppServices.Strings.Get("CliToolsDialogComposePluginDirectory"),
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold
+        });
+        content.Children.Add(composePluginDirectory);
         content.Children.Add(CreateButtonRow(refreshButton, installDockerButton, installDockerZipButton));
         content.Children.Add(CreateButtonRow(installComposeButton, installComposeExeButton));
         content.Children.Add(CreateButtonRow(addUserPathButton, addSystemPathButton));

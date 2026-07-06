@@ -28,10 +28,17 @@ public sealed class MockWslcControlPlane :
             "Today",
             "9 minutes",
             "localhost:8080 -> 80/tcp",
-            "nginx -g 'daemon off;'"),
+            "nginx -g 'daemon off;'",
+            Labels: new Dictionary<string, string>
+            {
+                [ComposeLabels.Project] = "sample-stack",
+                [ComposeLabels.Service] = "web",
+                [ComposeLabels.ProjectConfigFiles] = @"C:\Projects\sample\compose.yaml",
+                [ComposeLabels.ProjectWorkingDir] = @"C:\Projects\sample"
+            }),
         new(
             "a91dc77e",
-            "api-dev",
+            "worker",
             "docker.io/library/ubuntu:latest",
             ContainerRuntimeState.Stopped,
             0,
@@ -39,10 +46,18 @@ public sealed class MockWslcControlPlane :
             "Today",
             "Exited",
             "-",
-            "/bin/bash")
+            "/bin/bash",
+            Labels: new Dictionary<string, string>
+            {
+                [ComposeLabels.Project] = "sample-stack",
+                [ComposeLabels.Service] = "worker",
+                [ComposeLabels.ProjectConfigFiles] = @"C:\Projects\sample\compose.yaml",
+                [ComposeLabels.ProjectWorkingDir] = @"C:\Projects\sample"
+            })
     ];
 
     private readonly ConcurrentQueue<OperationRecord> _operations = new();
+    private readonly List<ImagePullTaskSnapshot> _pullTasks = [];
     private readonly List<VolumeSummary> _volumes =
     [
         new("web-content", "24 MB", "web", "Today", true),
@@ -162,17 +177,39 @@ public sealed class MockWslcControlPlane :
         return Task.FromResult(images);
     }
 
+    public Task<IReadOnlyList<ImagePullTaskSnapshot>> ListPullTasksAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<ImagePullTaskSnapshot>>(_pullTasks.OrderByDescending(task => task.StartedAt).ToArray());
+    }
+
     public async IAsyncEnumerable<ImagePullProgress> PullImageAsync(
         ImagePullRequest request,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        string taskId = Guid.NewGuid().ToString("N");
+        DateTimeOffset startedAt = DateTimeOffset.UtcNow;
+        _pullTasks.Add(new ImagePullTaskSnapshot(
+            taskId,
+            request.Reference,
+            "mock",
+            "Running",
+            startedAt,
+            null,
+            request.Reference,
+            "Queued",
+            0,
+            0,
+            string.Empty));
+
         for (ulong step = 1; step <= 3; step++)
         {
             cancellationToken.ThrowIfCancellationRequested();
             await Task.Delay(150, cancellationToken);
+            UpdateMockPullTask(taskId, "Running", $"MockPulling {step}/3", step, 3, string.Empty, completedAt: null);
             yield return new ImagePullProgress(request.Reference, "MockPulling", step, 3, ImagePullProgressKind.Progress);
         }
 
+        UpdateMockPullTask(taskId, "Succeeded", "Completed", 3, 3, string.Empty, DateTimeOffset.UtcNow);
         Track(new OperationRecord(
             Guid.NewGuid().ToString("N"),
             "Pull image",
@@ -212,7 +249,8 @@ public sealed class MockWslcControlPlane :
             request.Ports.Count == 0
                 ? "-"
                 : string.Join(", ", request.Ports.Select(port => $"localhost:{port.HostPort} -> {port.ContainerPort}/{port.Protocol}")),
-            request.Command.Count == 0 ? "/bin/sh" : string.Join(" ", request.Command));
+            request.Command.Count == 0 ? "/bin/sh" : string.Join(" ", request.Command),
+            Labels: request.Labels);
 
         _containers.Add(container);
         Track(new OperationRecord(
@@ -227,12 +265,14 @@ public sealed class MockWslcControlPlane :
 
     public Task StartAsync(string containerId, CancellationToken cancellationToken = default)
     {
+        UpdateContainerState(containerId, ContainerRuntimeState.Running, "Running");
         TrackContainerOperation(containerId, "Start container");
         return Task.CompletedTask;
     }
 
     public Task StopAsync(string containerId, CancellationToken cancellationToken = default)
     {
+        UpdateContainerState(containerId, ContainerRuntimeState.Stopped, "Exited");
         TrackContainerOperation(containerId, "Stop container");
         return Task.CompletedTask;
     }
@@ -246,6 +286,7 @@ public sealed class MockWslcControlPlane :
     public Task DeleteAsync(string containerId, CancellationToken cancellationToken = default)
     {
         TrackContainerOperation(containerId, "Delete container");
+        _containers.RemoveAll(container => container.Id.Equals(containerId, StringComparison.OrdinalIgnoreCase));
         return Task.CompletedTask;
     }
 
@@ -306,12 +347,50 @@ public sealed class MockWslcControlPlane :
 
     public Task<IReadOnlyList<ComposeProjectSummary>> ListProjectsAsync(CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<ComposeProjectSummary> projects =
-        [
-            new("sample-stack", 2, 1, @"C:\Projects\sample\compose.yaml")
-        ];
+        IReadOnlyList<ComposeProjectSummary> projects = _containers
+            .Where(container => container.Labels?.ContainsKey(ComposeLabels.Project) == true)
+            .GroupBy(container => container.Labels![ComposeLabels.Project], StringComparer.OrdinalIgnoreCase)
+            .Select(group => BuildMockProjectSummary(group.Key, group.ToArray()))
+            .OrderBy(project => project.Name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
         return Task.FromResult(projects);
+    }
+
+    public Task<ComposeProjectDetails> InspectProjectAsync(string projectName, CancellationToken cancellationToken = default)
+    {
+        var containers = GetMockProjectContainers(projectName);
+        var project = BuildMockProjectSummary(projectName, containers);
+        var services = containers
+            .GroupBy(container => container.Labels?.GetValueOrDefault(ComposeLabels.Service) ?? container.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new ComposeServiceRuntimeSummary(
+                projectName,
+                group.Key,
+                group.First().Image,
+                group.Count(),
+                group.Count(container => container.State == ContainerRuntimeState.Running),
+                JoinMockValues(group.Select(container => container.PortSummary), "-"),
+                JoinMockValues(group.Select(container => container.State.ToString()), "-")))
+            .OrderBy(service => service.ServiceName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var rows = containers
+            .Select(container => new ComposeContainerRuntimeSummary(
+                projectName,
+                container.Labels?.GetValueOrDefault(ComposeLabels.Service) ?? container.Name,
+                container.Id,
+                container.Name,
+                container.Image,
+                container.State,
+                container.CpuPercent,
+                container.MemoryUsed,
+                container.Created,
+                container.Uptime,
+                container.PortSummary))
+            .OrderBy(container => container.ServiceName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(container => container.Name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return Task.FromResult(new ComposeProjectDetails(project, services, rows));
     }
 
     public Task<IReadOnlyList<ComposeServicePlan>> PreviewAsync(string composePath, CancellationToken cancellationToken = default)
@@ -358,13 +437,57 @@ public sealed class MockWslcControlPlane :
                 service.Mounts,
                 service.Environment,
                 EnableGpu: false,
-                AutoRemove: false), cancellationToken);
+                AutoRemove: false,
+                new Dictionary<string, string>
+                {
+                    [ComposeLabels.Project] = service.ProjectName,
+                    [ComposeLabels.Service] = service.ServiceName,
+                    [ComposeLabels.ProjectConfigFiles] = composePath,
+                    [ComposeLabels.ProjectWorkingDir] = Path.GetDirectoryName(composePath) ?? string.Empty
+                }), cancellationToken);
 
             await StartAsync(container.Id, cancellationToken);
             created.Add(container);
         }
 
         return created;
+    }
+
+    public async Task StartProjectAsync(string projectName, CancellationToken cancellationToken = default)
+    {
+        foreach (var container in GetMockProjectContainers(projectName).Where(container => container.State != ContainerRuntimeState.Running))
+        {
+            await StartAsync(container.Id, cancellationToken);
+        }
+    }
+
+    public async Task StopProjectAsync(string projectName, CancellationToken cancellationToken = default)
+    {
+        foreach (var container in GetMockProjectContainers(projectName).Where(container => container.State == ContainerRuntimeState.Running))
+        {
+            await StopAsync(container.Id, cancellationToken);
+        }
+    }
+
+    public async Task RestartProjectAsync(string projectName, CancellationToken cancellationToken = default)
+    {
+        foreach (var container in GetMockProjectContainers(projectName).Where(container => container.State == ContainerRuntimeState.Running))
+        {
+            await RestartAsync(container.Id, cancellationToken);
+        }
+    }
+
+    public async Task DeleteProjectAsync(string projectName, CancellationToken cancellationToken = default)
+    {
+        foreach (var container in GetMockProjectContainers(projectName))
+        {
+            if (container.State == ContainerRuntimeState.Running)
+            {
+                await StopAsync(container.Id, cancellationToken);
+            }
+
+            await DeleteAsync(container.Id, cancellationToken);
+        }
     }
 
     public Task<CommandResult> RunAsync(string arguments, CancellationToken cancellationToken = default)
@@ -412,5 +535,87 @@ public sealed class MockWslcControlPlane :
             OperationState.Succeeded,
             $"{title} requested for {name}.",
             DateTimeOffset.Now));
+    }
+
+    private void UpdateContainerState(string containerId, ContainerRuntimeState state, string uptime)
+    {
+        int index = _containers.FindIndex(container => container.Id.Equals(containerId, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            return;
+        }
+
+        _containers[index] = _containers[index] with
+        {
+            State = state,
+            Uptime = uptime,
+            CpuPercent = state == ContainerRuntimeState.Running ? 1.2 : 0,
+            MemoryUsed = state == ContainerRuntimeState.Running ? "42 MB" : "-"
+        };
+    }
+
+    private IReadOnlyList<ContainerSummary> GetMockProjectContainers(string projectName)
+    {
+        return _containers
+            .Where(container => container.Labels is not null
+                && container.Labels.TryGetValue(ComposeLabels.Project, out string? value)
+                && value.Equals(projectName, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(container => container.Labels?.GetValueOrDefault(ComposeLabels.Service) ?? container.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(container => container.Name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static ComposeProjectSummary BuildMockProjectSummary(string projectName, IReadOnlyCollection<ContainerSummary> containers)
+    {
+        int serviceCount = containers
+            .Select(container => container.Labels?.GetValueOrDefault(ComposeLabels.Service))
+            .Where(service => !string.IsNullOrWhiteSpace(service))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Count();
+        string sourcePath = containers
+            .Select(container => container.Labels?.GetValueOrDefault(ComposeLabels.ProjectConfigFiles))
+            .FirstOrDefault(path => !string.IsNullOrWhiteSpace(path))
+            ?? string.Empty;
+
+        return new ComposeProjectSummary(
+            projectName,
+            serviceCount == 0 ? containers.Count : serviceCount,
+            containers.Count(container => container.State == ContainerRuntimeState.Running),
+            sourcePath);
+    }
+
+    private static string JoinMockValues(IEnumerable<string> values, string emptyValue)
+    {
+        var distinct = values
+            .Where(value => !string.IsNullOrWhiteSpace(value) && value != "-")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        return distinct.Length == 0 ? emptyValue : string.Join(", ", distinct);
+    }
+
+    private void UpdateMockPullTask(
+        string taskId,
+        string state,
+        string status,
+        ulong currentBytes,
+        ulong totalBytes,
+        string errorMessage,
+        DateTimeOffset? completedAt)
+    {
+        int index = _pullTasks.FindIndex(task => task.TaskId.Equals(taskId, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            return;
+        }
+
+        _pullTasks[index] = _pullTasks[index] with
+        {
+            State = state,
+            Status = status,
+            CurrentBytes = currentBytes,
+            TotalBytes = totalBytes,
+            ErrorMessage = errorMessage,
+            CompletedAt = completedAt
+        };
     }
 }

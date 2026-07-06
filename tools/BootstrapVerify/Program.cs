@@ -80,10 +80,34 @@ try
 
     string composeSource = Path.Combine(root, "compose-source.exe");
     await File.WriteAllTextAsync(composeSource, "compose");
-    CliToolInstallResult composeResult = await CliToolArchiveInstaller.InstallComposeFromExeAsync(composeSource, bin);
-    Expect(File.Exists(Path.Combine(bin, "docker-compose.exe")), "Compose installer must install standalone docker-compose.exe.");
-    Expect(File.Exists(Path.Combine(bin, "cli-plugins", "docker-compose.exe")), "Compose installer must install Docker CLI plugin docker-compose.exe.");
-    Expect(composeResult.InstalledFiles.Count == 2, "Compose installer must report both installed compose files.");
+    string dockerConfig = Path.Combine(root, "docker-config");
+    string? originalDockerConfig = Environment.GetEnvironmentVariable("DOCKER_CONFIG");
+    Environment.SetEnvironmentVariable("DOCKER_CONFIG", dockerConfig, EnvironmentVariableTarget.Process);
+    try
+    {
+        string extraPluginDirectory = Path.Combine(root, "extra-plugins");
+        Directory.CreateDirectory(dockerConfig);
+        await File.WriteAllTextAsync(
+            Path.Combine(dockerConfig, "config.json"),
+            $$"""{"cliPluginsExtraDirs":["{{extraPluginDirectory.Replace(@"\", @"\\", StringComparison.Ordinal)}}"]}""");
+
+        var dockerConfigPaths = new CliToolPathResolver();
+        Expect(dockerConfigPaths.UserDockerCliPluginDirectory == Path.Combine(dockerConfig, "cli-plugins"),
+            "Compose plugin resolver must honor DOCKER_CONFIG for the active user.");
+        Expect(dockerConfigPaths.GetCandidateComposePluginDirectories().Contains(extraPluginDirectory, StringComparer.OrdinalIgnoreCase),
+            "Compose plugin resolver must include Docker CLI cliPluginsExtraDirs.");
+        Expect(!dockerConfigPaths.GetCandidateComposePluginDirectories().Contains(Path.Combine(bin, "cli-plugins"), StringComparer.OrdinalIgnoreCase),
+            "Compose plugin resolver must not treat the app bin cli-plugins directory as a Docker CLI plugin directory.");
+        CliToolInstallResult composeResult = await CliToolArchiveInstaller.InstallComposeFromExeAsync(composeSource, bin);
+        string userPluginPath = Path.Combine(dockerConfig, "cli-plugins", "docker-compose.exe");
+        Expect(File.Exists(Path.Combine(bin, "docker-compose.exe")), "Compose installer must install standalone docker-compose.exe.");
+        Expect(File.Exists(userPluginPath), "Compose installer must install Docker CLI plugin under the user Docker config directory.");
+        Expect(composeResult.InstalledFiles.SequenceEqual([Path.Combine(bin, "docker-compose.exe"), userPluginPath]), "Compose installer must report the standalone file and user Docker CLI plugin file.");
+    }
+    finally
+    {
+        Environment.SetEnvironmentVariable("DOCKER_CONFIG", originalDockerConfig, EnvironmentVariableTarget.Process);
+    }
 
     string combinedPath = PathEnvironmentEditor.AddPathSegment(@"C:\Tools;C:\Existing", @"C:\Tools");
     Expect(combinedPath == @"C:\Tools;C:\Existing", "PATH editor must not duplicate existing path segments.");

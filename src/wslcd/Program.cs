@@ -23,6 +23,7 @@ var log = new DaemonLog(logPath);
 DateTimeOffset startedAt = DateTimeOffset.UtcNow;
 IContainerRuntimeProvider runtimeProvider = CreateRuntimeProvider(options);
 var operationTracker = new OperationTracker(runtimeProvider.Name, options.OperationRetentionCount);
+var imagePullTasks = new ImagePullTaskRegistry(options.OperationRetentionCount);
 
 using var shutdown = new CancellationTokenSource();
 Console.CancelKeyPress += (_, eventArgs) =>
@@ -43,10 +44,10 @@ string internalDockerPipeName = InternalDockerPipeName(options.DockerPipeName);
 log.Write($"starting nativePipe={options.NativePipeName} dockerPipe={options.DockerPipeName} internalDockerPipe={internalDockerPipeName} provider={runtimeProvider.Name}");
 
 WebApplication nativeApp = CreateApp(args, options.NativePipeName);
-MapNativeApi(nativeApp, options, startedAt, shutdown, runtimeProvider, operationTracker);
+MapNativeApi(nativeApp, options, startedAt, shutdown, runtimeProvider, operationTracker, imagePullTasks);
 
 WebApplication dockerApp = CreateApp(args, internalDockerPipeName);
-MapDockerApi(dockerApp, runtimeProvider);
+MapDockerApi(dockerApp, runtimeProvider, imagePullTasks);
 var dockerPipeProxy = new DockerPipeProxy(options.DockerPipeName, internalDockerPipeName, runtimeProvider);
 
 Task nativeTask = nativeApp.RunAsync(shutdown.Token);
@@ -109,7 +110,8 @@ static void MapNativeApi(
     DateTimeOffset startedAt,
     CancellationTokenSource shutdown,
     IContainerRuntimeProvider runtimeProvider,
-    OperationTracker operationTracker)
+    OperationTracker operationTracker,
+    ImagePullTaskRegistry imagePullTasks)
 {
     app.MapGet("/healthz", () => Results.Text("OK", "text/plain"));
 
@@ -178,11 +180,17 @@ static void MapNativeApi(
     app.MapGet("/v1/images", (CancellationToken cancellationToken) =>
         NativeResult(() => runtimeProvider.ListImagesAsync(cancellationToken)));
 
+    app.MapGet("/v1/images/pull/tasks", () => Results.Json(imagePullTasks.List()));
+
     app.MapPost("/v1/images/pull", (ImagePullRequest request, CancellationToken cancellationToken) =>
-        NativeResult(() => operationTracker.TrackResultAsync("image", request.Reference, "pull", () => runtimeProvider.PullImageAsync(request.Reference, cancellationToken))));
+        NativeResult(() => operationTracker.TrackResultAsync(
+            "image",
+            request.Reference,
+            "pull",
+            () => CollectImagePullWithTaskAsync(runtimeProvider, imagePullTasks, request.Reference, "native", cancellationToken))));
 
     app.MapPost("/v1/images/pull/stream", (ImagePullRequest request, HttpContext context, CancellationToken cancellationToken) =>
-        NativeImagePullStreamAsync(runtimeProvider, operationTracker, request, context, cancellationToken));
+        NativeImagePullStreamAsync(runtimeProvider, operationTracker, imagePullTasks, request, context, cancellationToken));
 
     app.MapDelete("/v1/images/{**idOrName}", (string idOrName, CancellationToken cancellationToken) =>
     {
@@ -450,7 +458,7 @@ static string Tail(string value)
     return value.Length <= 4096 ? value : value[^4096..];
 }
 
-static void MapDockerApi(WebApplication app, IContainerRuntimeProvider runtimeProvider)
+static void MapDockerApi(WebApplication app, IContainerRuntimeProvider runtimeProvider, ImagePullTaskRegistry imagePullTasks)
 {
     app.MapGet("/_ping", () => Results.Text("OK", "text/plain"));
     app.MapGet("/v{apiVersion}/_ping", () => Results.Text("OK", "text/plain"));
@@ -491,8 +499,8 @@ static void MapDockerApi(WebApplication app, IContainerRuntimeProvider runtimePr
     app.MapGet("/v{apiVersion}/images/json", (CancellationToken cancellationToken) => DockerResult(() => DockerImages(runtimeProvider, cancellationToken)));
     app.MapGet("/images/search", () => DockerImageSearchUnsupported());
     app.MapGet("/v{apiVersion}/images/search", () => DockerImageSearchUnsupported());
-    app.MapPost("/images/create", (HttpContext context, CancellationToken cancellationToken) => DockerImageCreate(runtimeProvider, context, cancellationToken));
-    app.MapPost("/v{apiVersion}/images/create", (HttpContext context, CancellationToken cancellationToken) => DockerImageCreate(runtimeProvider, context, cancellationToken));
+    app.MapPost("/images/create", (HttpContext context, CancellationToken cancellationToken) => DockerImageCreate(runtimeProvider, imagePullTasks, context, cancellationToken));
+    app.MapPost("/v{apiVersion}/images/create", (HttpContext context, CancellationToken cancellationToken) => DockerImageCreate(runtimeProvider, imagePullTasks, context, cancellationToken));
     app.MapGet("/images/{**name}", (string name, CancellationToken cancellationToken) => DockerImageGet(runtimeProvider, name, cancellationToken));
     app.MapGet("/v{apiVersion}/images/{**name}", (string name, CancellationToken cancellationToken) => DockerImageGet(runtimeProvider, name, cancellationToken));
     app.MapDelete("/images/{**name}", (string name, HttpContext context, CancellationToken cancellationToken) => DockerResult(() => DockerImageRemove(runtimeProvider, name, context, cancellationToken)));
@@ -1130,7 +1138,11 @@ static async Task<object> DockerImages(IContainerRuntimeProvider runtimeProvider
     return images.Select(DockerImageSummary).ToArray();
 }
 
-static async Task<IResult> DockerImageCreate(IContainerRuntimeProvider runtimeProvider, HttpContext context, CancellationToken cancellationToken)
+static async Task<IResult> DockerImageCreate(
+    IContainerRuntimeProvider runtimeProvider,
+    ImagePullTaskRegistry imagePullTasks,
+    HttpContext context,
+    CancellationToken cancellationToken)
 {
     try
     {
@@ -1145,11 +1157,11 @@ static async Task<IResult> DockerImageCreate(IContainerRuntimeProvider runtimePr
         return Results.Stream(async body =>
         {
             bool wroteFrame = false;
-            await foreach (var item in runtimeProvider.PullImageProgressAsync(reference, cancellationToken))
+            await StreamImagePullWithTaskAsync(runtimeProvider, imagePullTasks, reference, "docker-api", async item =>
             {
                 wroteFrame = true;
                 await WriteJsonLineAsync(body, DockerPullProgressMessage(item), cancellationToken);
-            }
+            }, cancellationToken);
 
             if (!wroteFrame)
             {
@@ -1182,6 +1194,7 @@ static async Task<IResult> DockerImageCreate(IContainerRuntimeProvider runtimePr
 static async Task NativeImagePullStreamAsync(
     IContainerRuntimeProvider runtimeProvider,
     OperationTracker operationTracker,
+    ImagePullTaskRegistry imagePullTasks,
     ImagePullRequest request,
     HttpContext context,
     CancellationToken cancellationToken)
@@ -1198,11 +1211,63 @@ static async Task NativeImagePullStreamAsync(
     context.Response.ContentType = "application/x-ndjson";
     await operationTracker.TrackAsync("image", request.Reference, "pull", async () =>
     {
-        await foreach (var frame in runtimeProvider.PullImageProgressAsync(request.Reference, cancellationToken))
-        {
-            await WriteJsonLineAsync(context.Response.Body, frame, cancellationToken);
-        }
+        await StreamImagePullWithTaskAsync(runtimeProvider, imagePullTasks, request.Reference, "native", frame =>
+            WriteJsonLineAsync(context.Response.Body, frame, cancellationToken), cancellationToken);
     });
+}
+
+static async Task<IReadOnlyList<ImagePullProgressDto>> CollectImagePullWithTaskAsync(
+    IContainerRuntimeProvider runtimeProvider,
+    ImagePullTaskRegistry imagePullTasks,
+    string reference,
+    string source,
+    CancellationToken cancellationToken)
+{
+    var frames = new List<ImagePullProgressDto>();
+    await StreamImagePullWithTaskAsync(
+        runtimeProvider,
+        imagePullTasks,
+        reference,
+        source,
+        frame =>
+        {
+            frames.Add(frame);
+            return Task.CompletedTask;
+        },
+        cancellationToken);
+
+    return frames;
+}
+
+static async Task StreamImagePullWithTaskAsync(
+    IContainerRuntimeProvider runtimeProvider,
+    ImagePullTaskRegistry imagePullTasks,
+    string reference,
+    string source,
+    Func<ImagePullProgressDto, Task> onFrame,
+    CancellationToken cancellationToken)
+{
+    var task = imagePullTasks.Start(reference, source);
+    try
+    {
+        await foreach (var frame in runtimeProvider.PullImageProgressAsync(reference, cancellationToken))
+        {
+            imagePullTasks.Update(task.TaskId, frame);
+            await onFrame(frame);
+        }
+
+        imagePullTasks.Succeed(task.TaskId);
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+        imagePullTasks.Fail(task.TaskId, "Canceled");
+        throw;
+    }
+    catch (Exception ex)
+    {
+        imagePullTasks.Fail(task.TaskId, ex.Message);
+        throw;
+    }
 }
 
 static async Task WriteJsonLineAsync(Stream body, object value, CancellationToken cancellationToken)

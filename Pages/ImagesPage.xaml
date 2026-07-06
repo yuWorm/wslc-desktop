@@ -148,7 +148,7 @@
                                 </Border>
 
                                 <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                    <Button IsEnabled="False" Padding="8,4">
+                                    <Button AutomationProperties.AutomationId="BtnRunImage" AutomationProperties.Name="Run image" Click="RunImage_Click" Padding="8,4" ToolTipService.ToolTip="Run image">
                                         <FontIcon FontSize="12" Glyph="&#xE768;" />
                                     </Button>
                                     <Button IsEnabled="False" Padding="8,4">

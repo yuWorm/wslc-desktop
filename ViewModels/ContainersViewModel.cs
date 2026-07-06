@@ -40,9 +40,9 @@ public sealed class ContainersViewModel : ViewModelBase
     private string _searchText = string.Empty;
     private string _selectedStateFilter = FilterAll;
     private string _selectedContainerLogs = string.Empty;
-    private string _newContainerName = "web";
-    private string _newContainerImage = "alpine:latest";
-    private string _newContainerCommand = "/bin/sleep infinity";
+    private string _newContainerName = ContainerCreateDraft.Default().Name;
+    private string _newContainerImage = ContainerCreateDraft.Default().Image;
+    private string _newContainerCommand = ContainerCreateDraft.Default().Command;
     private string _newContainerPort = string.Empty;
     private string _newContainerMounts = string.Empty;
     private string _newContainerEnvironment = string.Empty;
@@ -419,6 +419,27 @@ public sealed class ContainersViewModel : ViewModelBase
             await _containerService.StartAsync(container.Id);
             await LoadAsync();
         });
+    }
+
+    public ContainerCreateDraft CreateDraft()
+    {
+        return new ContainerCreateDraft(
+            NewContainerName,
+            NewContainerImage,
+            NewContainerCommand,
+            NewContainerPort,
+            NewContainerMounts,
+            NewContainerEnvironment);
+    }
+
+    public void ApplyCreateDraft(ContainerCreateDraft draft)
+    {
+        NewContainerName = draft.Name;
+        NewContainerImage = draft.Image;
+        NewContainerCommand = draft.Command;
+        NewContainerPort = draft.Ports;
+        NewContainerMounts = draft.Mounts;
+        NewContainerEnvironment = draft.Environment;
     }
 
     public Task StartSelectedAsync() => CanStartSelectedContainer

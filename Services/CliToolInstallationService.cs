@@ -10,6 +10,8 @@ public interface ICliToolInstallationService
 {
     string BinDirectory { get; }
 
+    string ComposePluginDirectory { get; }
+
     Task<CliToolInstallResult> InstallDockerCliFromZipAsync(string zipPath, CancellationToken cancellationToken = default);
 
     Task<CliToolInstallResult> InstallComposeFromExeAsync(string exePath, CancellationToken cancellationToken = default);
@@ -44,6 +46,8 @@ public sealed class CliToolInstallationService : ICliToolInstallationService
 
     public string BinDirectory => _paths.ResolveWritableBinDirectory();
 
+    public string ComposePluginDirectory => _paths.UserDockerCliPluginDirectory;
+
     public Task<CliToolInstallResult> InstallDockerCliFromZipAsync(string zipPath, CancellationToken cancellationToken = default)
     {
         return CliToolArchiveInstaller.InstallDockerCliFromZipAsync(zipPath, BinDirectory, cancellationToken);
@@ -51,7 +55,7 @@ public sealed class CliToolInstallationService : ICliToolInstallationService
 
     public Task<CliToolInstallResult> InstallComposeFromExeAsync(string exePath, CancellationToken cancellationToken = default)
     {
-        return CliToolArchiveInstaller.InstallComposeFromExeAsync(exePath, BinDirectory, cancellationToken);
+        return CliToolArchiveInstaller.InstallComposeFromExeAsync(exePath, BinDirectory, ComposePluginDirectory, cancellationToken);
     }
 
     public async Task<CliToolInstallResult> InstallLatestDockerCliAsync(CancellationToken cancellationToken = default)

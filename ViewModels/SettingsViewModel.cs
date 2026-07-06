@@ -41,6 +41,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private string _startupTaskStatus = AppServices.Strings.Get("StartupTaskStatusUnknown");
     private string _cliToolsStatus = AppServices.Strings.Get("CliToolsStatusUnknown");
     private string _cliToolsBinDirectory = string.Empty;
+    private string _cliToolsComposePluginDirectory = string.Empty;
     private ShellStatusState _daemonStatusState = ShellStatusState.Checking;
     private string _daemonStatusText = ShellStatusLabels.English.Checking;
     private bool _canStartDaemon;
@@ -302,6 +303,12 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         get => _cliToolsBinDirectory;
         private set => SetProperty(ref _cliToolsBinDirectory, value);
+    }
+
+    public string CliToolsComposePluginDirectory
+    {
+        get => _cliToolsComposePluginDirectory;
+        private set => SetProperty(ref _cliToolsComposePluginDirectory, value);
     }
 
     public bool HasError
@@ -578,9 +585,8 @@ public sealed class SettingsViewModel : ViewModelBase
         {
             HasError = false;
             ErrorMessage = string.Empty;
-            string dockerConfigDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                ".docker");
+            string dockerConfigDirectory = Path.GetDirectoryName(_cliToolInstallationService.ComposePluginDirectory)
+                ?? _cliToolInstallationService.ComposePluginDirectory;
             Directory.CreateDirectory(dockerConfigDirectory);
             Process.Start(new ProcessStartInfo
             {
@@ -605,6 +611,7 @@ public sealed class SettingsViewModel : ViewModelBase
             WslcPrerequisiteStatus wslc = await _bootstrapService.CheckWslcAsync();
             DockerCliStatus docker = await _bootstrapService.CheckDockerCliAsync();
             CliToolsBinDirectory = _cliToolInstallationService.BinDirectory;
+            CliToolsComposePluginDirectory = _cliToolInstallationService.ComposePluginDirectory;
             CliToolsStatus = FormatCliToolsStatus(wslc, docker);
         }, updateMessage: false);
     }
@@ -745,6 +752,7 @@ public sealed class SettingsViewModel : ViewModelBase
         WslcPrerequisiteStatus wslc = await _bootstrapService.CheckWslcAsync();
         DockerCliStatus docker = await _bootstrapService.CheckDockerCliAsync();
         CliToolsBinDirectory = _cliToolInstallationService.BinDirectory;
+        CliToolsComposePluginDirectory = _cliToolInstallationService.ComposePluginDirectory;
         CliToolsStatus = FormatCliToolsStatus(wslc, docker);
     }
 

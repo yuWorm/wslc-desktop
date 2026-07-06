@@ -71,7 +71,7 @@ foreach ($needle in @(
 
 foreach ($needle in @(
     "wsl --install",
-    "wsl --update",
+    "wsl --update --pre-release",
     "wslc.exe",
     "wslcd-desktop",
     "npipe:////./pipe/wslc-desktop-docker",
@@ -83,6 +83,7 @@ foreach ($needle in @(
     "WSLC backend",
     "Settings -> CLI tools",
     "docker-compose.exe",
+    "DOCKER_CONFIG",
     "cli-plugins"
 )) {
     Require-Contains $english ([regex]::Escape($needle)) "English README must document '$needle'."

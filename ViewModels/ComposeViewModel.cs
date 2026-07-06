@@ -14,12 +14,17 @@ public sealed class ComposeViewModel : ViewModelBase
     private string _message = AppServices.Strings.Get("ComposeNoProjects");
     private string _selectedComposePath = string.Empty;
     private string _searchText = string.Empty;
+    private ComposeProjectSummary? _selectedProject;
+    private ComposeProjectDetails? _selectedProjectDetails;
 
     public ComposeViewModel(IComposePlanService composePlanService)
     {
         _composePlanService = composePlanService;
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
         CreateAndStartCommand = new AsyncRelayCommand(CreateAndStartAsync, () => CanCreateAndStart);
+        StartProjectCommand = new AsyncRelayCommand(StartSelectedProjectAsync, () => CanStartSelectedProject);
+        StopProjectCommand = new AsyncRelayCommand(StopSelectedProjectAsync, () => CanStopSelectedProject);
+        RestartProjectCommand = new AsyncRelayCommand(RestartSelectedProjectAsync, () => CanRestartSelectedProject);
     }
 
     public ObservableCollection<ComposeProjectSummary> Projects { get; } = [];
@@ -30,9 +35,19 @@ public sealed class ComposeViewModel : ViewModelBase
 
     public ObservableCollection<ComposeServicePlan> VisibleServicePlans { get; } = [];
 
+    public ObservableCollection<ComposeServiceRuntimeSummary> RuntimeServices { get; } = [];
+
+    public ObservableCollection<ComposeContainerRuntimeSummary> RuntimeContainers { get; } = [];
+
     public AsyncRelayCommand RefreshCommand { get; }
 
     public AsyncRelayCommand CreateAndStartCommand { get; }
+
+    public AsyncRelayCommand StartProjectCommand { get; }
+
+    public AsyncRelayCommand StopProjectCommand { get; }
+
+    public AsyncRelayCommand RestartProjectCommand { get; }
 
     public bool IsLoading
     {
@@ -49,8 +64,7 @@ public sealed class ComposeViewModel : ViewModelBase
         {
             if (SetProperty(ref _isBusy, value))
             {
-                OnPropertyChanged(nameof(CanCreateAndStart));
-                CreateAndStartCommand.RaiseCanExecuteChanged();
+                RaiseCommandStates();
             }
         }
     }
@@ -58,6 +72,22 @@ public sealed class ComposeViewModel : ViewModelBase
     public bool CanCreateAndStart => !IsBusy
         && ServicePlans.Count > 0
         && !string.IsNullOrWhiteSpace(SelectedComposePath);
+
+    public bool CanStartSelectedProject => !IsBusy
+        && SelectedProject is not null
+        && RuntimeContainers.Any(container => !container.IsRunning);
+
+    public bool CanStopSelectedProject => !IsBusy
+        && SelectedProject is not null
+        && RuntimeContainers.Any(container => container.IsRunning);
+
+    public bool CanRestartSelectedProject => !IsBusy
+        && SelectedProject is not null
+        && RuntimeContainers.Any(container => container.IsRunning);
+
+    public bool CanDeleteSelectedProject => !IsBusy
+        && SelectedProject is not null
+        && RuntimeContainers.Count > 0;
 
     public bool HasError
     {
@@ -90,6 +120,37 @@ public sealed class ComposeViewModel : ViewModelBase
         }
     }
 
+    public ComposeProjectSummary? SelectedProject
+    {
+        get => _selectedProject;
+        set => SetSelectedProject(value, loadDetails: true);
+    }
+
+    public ComposeProjectDetails? SelectedProjectDetails
+    {
+        get => _selectedProjectDetails;
+        private set
+        {
+            if (SetProperty(ref _selectedProjectDetails, value))
+            {
+                OnPropertyChanged(nameof(HasSelectedProject));
+                OnPropertyChanged(nameof(SelectedProjectName));
+                OnPropertyChanged(nameof(SelectedProjectSourcePath));
+                OnPropertyChanged(nameof(SelectedProjectStatusText));
+            }
+        }
+    }
+
+    public bool HasSelectedProject => SelectedProjectDetails is not null;
+
+    public string SelectedProjectName => SelectedProjectDetails?.Project.Name ?? AppServices.Strings.Get("ComposeNoProjectSelected");
+
+    public string SelectedProjectSourcePath => string.IsNullOrWhiteSpace(SelectedProjectDetails?.Project.SourcePath)
+        ? "-"
+        : SelectedProjectDetails.Project.SourcePath;
+
+    public string SelectedProjectStatusText => SelectedProjectDetails?.Project.StatusText ?? "-";
+
     public string SearchText
     {
         get => _searchText;
@@ -107,6 +168,7 @@ public sealed class ComposeViewModel : ViewModelBase
     public async Task LoadAsync()
     {
         IsLoading = true;
+        string selectedName = SelectedProject?.Name ?? string.Empty;
 
         try
         {
@@ -121,6 +183,10 @@ public sealed class ComposeViewModel : ViewModelBase
             }
 
             ApplyFilters();
+            var nextSelection = Projects.FirstOrDefault(project => project.Name.Equals(selectedName, StringComparison.OrdinalIgnoreCase))
+                ?? Projects.FirstOrDefault();
+            SetSelectedProject(nextSelection, loadDetails: false);
+            await LoadSelectedProjectDetailsAsync();
             Message = Projects.Count == 0
                 ? AppServices.Strings.Get("ComposeNoProjects")
                 : AppServices.Strings.Format(
@@ -134,6 +200,7 @@ public sealed class ComposeViewModel : ViewModelBase
         {
             HasError = true;
             ErrorMessage = ex.Message;
+            ClearSelectedProjectDetails();
             OnPropertyChanged(nameof(IsEmpty));
         }
         finally
@@ -183,6 +250,34 @@ public sealed class ComposeViewModel : ViewModelBase
         CreateAndStartCommand.RaiseCanExecuteChanged();
     }
 
+    public Task DeleteSelectedProjectAsync()
+    {
+        return CanDeleteSelectedProject
+            ? PerformSelectedProjectActionAsync(_composePlanService.DeleteProjectAsync, "ComposeProjectDeleted")
+            : Task.CompletedTask;
+    }
+
+    private Task StartSelectedProjectAsync()
+    {
+        return CanStartSelectedProject
+            ? PerformSelectedProjectActionAsync(_composePlanService.StartProjectAsync, "ComposeProjectStarted")
+            : Task.CompletedTask;
+    }
+
+    private Task StopSelectedProjectAsync()
+    {
+        return CanStopSelectedProject
+            ? PerformSelectedProjectActionAsync(_composePlanService.StopProjectAsync, "ComposeProjectStopped")
+            : Task.CompletedTask;
+    }
+
+    private Task RestartSelectedProjectAsync()
+    {
+        return CanRestartSelectedProject
+            ? PerformSelectedProjectActionAsync(_composePlanService.RestartProjectAsync, "ComposeProjectRestarted")
+            : Task.CompletedTask;
+    }
+
     private async Task CreateAndStartAsync()
     {
         if (!CanCreateAndStart)
@@ -197,11 +292,11 @@ public sealed class ComposeViewModel : ViewModelBase
             HasError = false;
             ErrorMessage = string.Empty;
             var containers = await _composePlanService.CreateAndStartAsync(SelectedComposePath);
+            await LoadAsync();
             Message = AppServices.Strings.Format(
                 "ComposeContainersCreated",
                 containers.Count,
                 containers.Count == 1 ? string.Empty : "s");
-            await LoadAsync();
         }
         catch (Exception ex)
         {
@@ -212,6 +307,101 @@ public sealed class ComposeViewModel : ViewModelBase
         {
             IsBusy = false;
         }
+    }
+
+    private async Task PerformSelectedProjectActionAsync(
+        Func<string, CancellationToken, Task> action,
+        string successMessageKey)
+    {
+        string? projectName = SelectedProject?.Name;
+        if (string.IsNullOrWhiteSpace(projectName))
+        {
+            return;
+        }
+
+        IsBusy = true;
+
+        try
+        {
+            HasError = false;
+            ErrorMessage = string.Empty;
+            await action(projectName, CancellationToken.None);
+            await LoadAsync();
+            Message = AppServices.Strings.Format(successMessageKey, projectName);
+        }
+        catch (Exception ex)
+        {
+            HasError = true;
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task LoadSelectedProjectDetailsAsync()
+    {
+        if (SelectedProject is null)
+        {
+            ClearSelectedProjectDetails();
+            return;
+        }
+
+        try
+        {
+            var details = await _composePlanService.InspectProjectAsync(SelectedProject.Name);
+            SelectedProjectDetails = details;
+            RuntimeServices.Clear();
+            RuntimeContainers.Clear();
+
+            foreach (var service in details.Services)
+            {
+                RuntimeServices.Add(service);
+            }
+
+            foreach (var container in details.Containers)
+            {
+                RuntimeContainers.Add(container);
+            }
+
+            RaiseCommandStates();
+        }
+        catch (Exception ex)
+        {
+            HasError = true;
+            ErrorMessage = ex.Message;
+            ClearSelectedProjectDetails();
+        }
+    }
+
+    private void SetSelectedProject(ComposeProjectSummary? project, bool loadDetails)
+    {
+        if (!SetProperty(ref _selectedProject, project, nameof(SelectedProject)))
+        {
+            if (loadDetails)
+            {
+                _ = LoadSelectedProjectDetailsAsync();
+            }
+
+            return;
+        }
+
+        OnPropertyChanged(nameof(HasSelectedProject));
+        RaiseCommandStates();
+
+        if (loadDetails)
+        {
+            _ = LoadSelectedProjectDetailsAsync();
+        }
+    }
+
+    private void ClearSelectedProjectDetails()
+    {
+        SelectedProjectDetails = null;
+        RuntimeServices.Clear();
+        RuntimeContainers.Clear();
+        RaiseCommandStates();
     }
 
     private void ApplyFilters()
@@ -261,6 +451,19 @@ public sealed class ComposeViewModel : ViewModelBase
             || Contains(service.MountSummary, query)
             || Contains(service.DependsOnSummary, query)
             || Contains(service.UnsupportedSummary, query);
+    }
+
+    private void RaiseCommandStates()
+    {
+        OnPropertyChanged(nameof(CanCreateAndStart));
+        OnPropertyChanged(nameof(CanStartSelectedProject));
+        OnPropertyChanged(nameof(CanStopSelectedProject));
+        OnPropertyChanged(nameof(CanRestartSelectedProject));
+        OnPropertyChanged(nameof(CanDeleteSelectedProject));
+        CreateAndStartCommand.RaiseCanExecuteChanged();
+        StartProjectCommand.RaiseCanExecuteChanged();
+        StopProjectCommand.RaiseCanExecuteChanged();
+        RestartProjectCommand.RaiseCanExecuteChanged();
     }
 
     private static bool Contains(string value, string query)

@@ -11,6 +11,7 @@
     <Compile Include="..\..\Models\TerminalSessionModels.cs" Link="Models\TerminalSessionModels.cs" />
     <Compile Include="..\..\Services\IWslcServices.cs" Link="Services\IWslcServices.cs" />
     <Compile Include="..\..\Services\ContainerCreateInputParser.cs" Link="Services\ContainerCreateInputParser.cs" />
+    <Compile Include="..\..\Services\ComposeLabels.cs" Link="Services\ComposeLabels.cs" />
     <Compile Include="..\..\Services\ComposePlanService.cs" Link="Services\ComposePlanService.cs" />
   </ItemGroup>
 

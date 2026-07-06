@@ -15,5 +15,6 @@
     <Compile Include="..\..\ViewModels\ShellStatusViewModel.cs" Link="ViewModels\ShellStatusViewModel.cs" />
     <Compile Include="..\..\ViewModels\DaemonActionAvailability.cs" Link="ViewModels\DaemonActionAvailability.cs" />
     <Compile Include="..\..\Services\SettingsRestartImpact.cs" Link="Services\SettingsRestartImpact.cs" />
+    <Compile Include="..\..\src\wslcd\ImagePullTaskRegistry.cs" Link="Wslcd\ImagePullTaskRegistry.cs" />
   </ItemGroup>
 </Project>

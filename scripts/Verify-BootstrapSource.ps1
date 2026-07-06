@@ -46,6 +46,7 @@ $bootstrap = Read-ProjectFile "Services\EnvironmentBootstrapService.cs"
 $evaluator = Read-ProjectFile "Services\BootstrapPrerequisiteEvaluator.cs"
 $installer = Read-ProjectFile "Services\CliToolInstallationService.cs"
 $archiveInstaller = Read-ProjectFile "Services\CliToolArchiveInstaller.cs"
+$cliToolPathResolver = Read-ProjectFile "Services\CliToolPathResolver.cs"
 $releaseIndex = Read-ProjectFile "Services\DockerStaticReleaseIndex.cs"
 $pathEditor = Read-ProjectFile "Services\PathEnvironmentEditor.cs"
 $settingsVm = Read-ProjectFile "ViewModels\SettingsViewModel.cs"
@@ -134,10 +135,18 @@ Require-NotContains $app 'AcceptsReturn\s*=\s*true' "WSLC required dialog must n
 foreach ($needle in @("https://download.docker.com/win/static/stable/x86_64/", "https://api.github.com/repos/docker/compose/releases/latest", "InstallLatestDockerCliAsync", "InstallLatestComposeAsync", "AddBinToUserPath", "AddBinToMachinePathAsync", "runas")) {
     Require-Contains $installer ([regex]::Escape($needle)) "CLI tool installer must contain $needle."
 }
+foreach ($needle in @("ComposePluginDirectory", "UserDockerCliPluginDirectory")) {
+    Require-Contains $installer ([regex]::Escape($needle)) "CLI tool installer must expose $needle."
+}
 
-foreach ($needle in @("InstallDockerCliFromZipAsync", "InstallComposeFromExeAsync", "docker.exe", "docker-compose.exe", "cli-plugins")) {
+foreach ($needle in @("InstallDockerCliFromZipAsync", "InstallComposeFromExeAsync", "docker.exe", "docker-compose.exe", "pluginDirectory")) {
     Require-Contains $archiveInstaller ([regex]::Escape($needle)) "Archive installer must contain $needle."
 }
+foreach ($needle in @("DOCKER_CONFIG", "UserDockerCliPluginDirectory", "GetCandidateComposePluginDirectories", "ProgramFiles", "cliPluginsExtraDirs")) {
+    Require-Contains $cliToolPathResolver ([regex]::Escape($needle)) "CLI tool path resolver must contain $needle."
+}
+Require-NotContains $cliToolPathResolver 'GetCandidateBinDirectories\(\)\.Select\(directory => Path\.Combine\(directory, "cli-plugins"\)\)' "Compose plugin resolver must not treat the app bin cli-plugins directory as a Docker CLI plugin directory."
+Require-Contains $archiveInstaller "UserDockerCliPluginDirectory" "Compose installer must install Docker CLI plugin under the active user's Docker config directory."
 
 foreach ($needle in @("FindLatestDockerZip", "GeneratedRegex", "docker-")) {
     Require-Contains $releaseIndex ([regex]::Escape($needle)) "Docker static release parser must contain $needle."
@@ -162,12 +171,12 @@ foreach ($needle in @("OpenCliToolsDialog_Click", "CreateDockerContextDefault_Cl
     Require-Contains $settingsCodeBehind ([regex]::Escape($needle)) "Settings code-behind must contain $needle."
 }
 
-foreach ($needle in @("SettingsCliToolsHeading.Text", "SettingsCliToolsStatusInfo.Title", "SettingsCliToolsManageText.Text", "SettingsCliToolsDockerContextText.Text")) {
+foreach ($needle in @("SettingsCliToolsHeading.Text", "SettingsCliToolsStatusInfo.Title", "SettingsCliToolsBinLabel.Text", "SettingsCliToolsComposePluginLabel.Text", "SettingsCliToolsManageText.Text", "SettingsCliToolsDockerContextText.Text")) {
     Require-Contains $en ([regex]::Escape($needle)) "English resources must contain $needle."
     Require-Contains $zh ([regex]::Escape($needle)) "Chinese resources must contain $needle."
 }
 
-foreach ($needle in @("WslcRequiredDialogTitle", "WslcRequiredMissingWslMessage", "WslcRequiredUpdateRequiredMessage", "WslcRequiredUpdateRequiredWithVersion", "WslcRequiredTimedOutMessage", "WslcRequiredCommandHeader", "DockerCliOptionalDialogTitle", "CliToolsWslcMissing", "CliToolsPathAdded", "CliToolsSystemPathAdded", "CliToolsDialogTitle", "DockerContextDefaultCreated", "DockerContextDefaultConfirmTitle")) {
+foreach ($needle in @("WslcRequiredDialogTitle", "WslcRequiredMissingWslMessage", "WslcRequiredUpdateRequiredMessage", "WslcRequiredUpdateRequiredWithVersion", "WslcRequiredTimedOutMessage", "WslcRequiredCommandHeader", "DockerCliOptionalDialogTitle", "CliToolsWslcMissing", "CliToolsPathAdded", "CliToolsSystemPathAdded", "CliToolsDialogTitle", "CliToolsDialogComposePluginDirectory", "DockerContextDefaultCreated", "DockerContextDefaultConfirmTitle")) {
     Require-Contains $localizer ([regex]::Escape($needle)) "AppStringLocalizer must contain $needle."
 }
 foreach ($needle in @("StartupOverlayTitle.Text", "StartupOverlayDescription.Text", "WslcRequiredDialogTitle", "WslcRequiredMissingWslMessage", "WslcRequiredUpdateRequiredMessage", "WslcRequiredUpdateRequiredWithVersion", "WslcRequiredTimedOutMessage", "WslcRequiredCommandHeader", "Recheck", "CopyCommand")) {
@@ -175,7 +184,7 @@ foreach ($needle in @("StartupOverlayTitle.Text", "StartupOverlayDescription.Tex
     Require-Contains $zh ([regex]::Escape($needle)) "Chinese resources must contain $needle."
 }
 
-foreach ($needle in @("wsl --update --pre-release", "English localizer must include WSLC required missing-WSL dialog content", "Chinese localizer must include WSLC required missing-WSL dialog content", "Missing WSL must list update and install commands one per line", "Old WSL must list update and install commands one per line", "Timed-out WSLC checks must list update and install commands one per line", "Default settings must force the first-run WSLC gate", "Settings must persist the successful WSLC initialization marker", "Docker CLI installer must not copy dockerd.exe", "Compose installer must install Docker CLI plugin")) {
+foreach ($needle in @("wsl --update --pre-release", "English localizer must include WSLC required missing-WSL dialog content", "Chinese localizer must include WSLC required missing-WSL dialog content", "Missing WSL must list update and install commands one per line", "Old WSL must list update and install commands one per line", "Timed-out WSLC checks must list update and install commands one per line", "Default settings must force the first-run WSLC gate", "Settings must persist the successful WSLC initialization marker", "Docker CLI installer must not copy dockerd.exe", "Compose plugin resolver must honor DOCKER_CONFIG", "Compose plugin resolver must include Docker CLI cliPluginsExtraDirs", "Compose plugin resolver must not treat the app bin cli-plugins directory as a Docker CLI plugin directory", "Compose installer must install Docker CLI plugin under the user Docker config directory")) {
     Require-Contains $bootstrapVerify ([regex]::Escape($needle)) "BootstrapVerify must assert $needle."
 }
 

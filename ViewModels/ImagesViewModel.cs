@@ -7,6 +7,7 @@ namespace wslc_desktop.ViewModels;
 public sealed class ImagesViewModel : ViewModelBase
 {
     private readonly IWslcImageService _imageService;
+    private readonly IWslcContainerService _containerService;
     private readonly IOperationTracker _operationTracker;
     private bool _isLoading;
     private bool _isPulling;
@@ -19,10 +20,12 @@ public sealed class ImagesViewModel : ViewModelBase
     private ImageSummary? _selectedImage;
     private readonly List<ImageSummary> _allImages = [];
     private readonly SemaphoreSlim _loadGate = new(1, 1);
+    private readonly SemaphoreSlim _pullTaskSyncGate = new(1, 1);
 
-    public ImagesViewModel(IWslcImageService imageService, IOperationTracker operationTracker)
+    public ImagesViewModel(IWslcImageService imageService, IWslcContainerService containerService, IOperationTracker operationTracker)
     {
         _imageService = imageService;
+        _containerService = containerService;
         _operationTracker = operationTracker;
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
         PullCommand = new AsyncRelayCommand(PullAsync, () => !string.IsNullOrWhiteSpace(ImageReference));
@@ -138,6 +141,7 @@ public sealed class ImagesViewModel : ViewModelBase
                 _allImages.Add(image);
             }
 
+            await SyncPullTasksAsync();
             ApplyFilters();
             Message = AppServices.Strings.Format(
                 "ImagesAvailable",
@@ -225,6 +229,52 @@ public sealed class ImagesViewModel : ViewModelBase
         }
     }
 
+    public Task RefreshPullTasksAsync()
+    {
+        return SyncPullTasksAsync(skipIfBusy: true, suppressErrors: true);
+    }
+
+    public async Task CreateContainerAsync(ContainerCreateDraft draft)
+    {
+        if (string.IsNullOrWhiteSpace(draft.Image))
+        {
+            return;
+        }
+
+        try
+        {
+            HasError = false;
+            ErrorMessage = string.Empty;
+            var container = await _containerService.CreateAsync(new ContainerCreateRequest(
+                draft.Name,
+                draft.Image,
+                ContainerCreateInputParser.ParseCommandLine(draft.Command),
+                ContainerCreateInputParser.ParsePortMappings(draft.Ports),
+                ContainerCreateInputParser.ParseMounts(draft.Mounts),
+                ContainerCreateInputParser.ParseEnvironment(draft.Environment),
+                EnableGpu: false,
+                AutoRemove: false));
+            await _containerService.StartAsync(container.Id);
+            _operationTracker.Track(new OperationRecord(
+                Guid.NewGuid().ToString("N"),
+                "Create container",
+                OperationState.Succeeded,
+                container.Name,
+                DateTimeOffset.Now));
+        }
+        catch (Exception ex)
+        {
+            HasError = true;
+            ErrorMessage = ex.Message;
+            _operationTracker.Track(new OperationRecord(
+                Guid.NewGuid().ToString("N"),
+                "Create container",
+                OperationState.Failed,
+                ex.Message,
+                DateTimeOffset.Now));
+        }
+    }
+
     public async Task DeleteSelectedAsync()
     {
         if (SelectedImage is null)
@@ -306,5 +356,82 @@ public sealed class ImagesViewModel : ViewModelBase
         PullProgressText = PullTasks.Count == 0
             ? string.Empty
             : AppServices.Strings.Format("ImagePullTasksSummary", activeCount, PullTasks.Count);
+    }
+
+    private async Task SyncPullTasksAsync(bool skipIfBusy = false, bool suppressErrors = false)
+    {
+        if (skipIfBusy && !await _pullTaskSyncGate.WaitAsync(0))
+        {
+            return;
+        }
+
+        if (!skipIfBusy)
+        {
+            await _pullTaskSyncGate.WaitAsync();
+        }
+
+        try
+        {
+            var tasks = await _imageService.ListPullTasksAsync();
+            PullTasks.Clear();
+            foreach (var task in tasks.OrderByDescending(task => task.StartedAt))
+            {
+                PullTasks.Add(CreatePullTask(task));
+            }
+
+            OnPropertyChanged(nameof(HasPullTasks));
+            UpdatePullingState();
+        }
+        catch when (suppressErrors)
+        {
+        }
+        finally
+        {
+            _pullTaskSyncGate.Release();
+        }
+    }
+
+    private static ImagePullTaskViewModel CreatePullTask(ImagePullTaskSnapshot task)
+    {
+        var viewModel = new ImagePullTaskViewModel(
+            task.Reference,
+            task.StartedAt,
+            AppServices.Strings.Get("ImagePullTaskQueued"),
+            task.TaskId);
+
+        string state = task.State.Trim().ToLowerInvariant();
+        if (state == "succeeded")
+        {
+            viewModel.MarkSucceeded(AppServices.Strings.Get("ImagePullTaskCompleted"));
+            return viewModel;
+        }
+
+        if (state == "failed")
+        {
+            string error = string.IsNullOrWhiteSpace(task.ErrorMessage)
+                ? AppServices.Strings.Get("ImagePullTaskFailed")
+                : task.ErrorMessage;
+            viewModel.MarkFailed(AppServices.Strings.Get("ImagePullTaskFailed"), error);
+            return viewModel;
+        }
+
+        viewModel.UpdateProgress(
+            AppServices.Strings.Get("ImagePullTaskPulling"),
+            PullTaskDetail(task),
+            task.CurrentBytes,
+            task.TotalBytes);
+        return viewModel;
+    }
+
+    private static string PullTaskDetail(ImagePullTaskSnapshot task)
+    {
+        if (task.TotalBytes > 0)
+        {
+            return AppServices.Strings.Format("ImagePulling", task.ProgressId, task.CurrentBytes, task.TotalBytes);
+        }
+
+        string progressId = string.IsNullOrWhiteSpace(task.ProgressId) ? task.Reference : task.ProgressId;
+        string status = string.IsNullOrWhiteSpace(task.Status) ? "Pulling" : task.Status;
+        return AppServices.Strings.Format("ImagePullingStatus", progressId, status);
     }
 }

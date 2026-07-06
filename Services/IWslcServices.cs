@@ -18,6 +18,8 @@ public interface IWslcImageService
 {
     Task<IReadOnlyList<ImageSummary>> ListImagesAsync(CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<ImagePullTaskSnapshot>> ListPullTasksAsync(CancellationToken cancellationToken = default);
+
     IAsyncEnumerable<ImagePullProgress> PullImageAsync(ImagePullRequest request, CancellationToken cancellationToken = default);
 
     Task DeleteImageAsync(string imageReference, CancellationToken cancellationToken = default);
@@ -89,9 +91,19 @@ public interface IComposePlanService
 {
     Task<IReadOnlyList<ComposeProjectSummary>> ListProjectsAsync(CancellationToken cancellationToken = default);
 
+    Task<ComposeProjectDetails> InspectProjectAsync(string projectName, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<ComposeServicePlan>> PreviewAsync(string composePath, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ContainerSummary>> CreateAndStartAsync(string composePath, CancellationToken cancellationToken = default);
+
+    Task StartProjectAsync(string projectName, CancellationToken cancellationToken = default);
+
+    Task StopProjectAsync(string projectName, CancellationToken cancellationToken = default);
+
+    Task RestartProjectAsync(string projectName, CancellationToken cancellationToken = default);
+
+    Task DeleteProjectAsync(string projectName, CancellationToken cancellationToken = default);
 }
 
 public interface IWslcCommandFallback

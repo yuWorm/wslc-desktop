@@ -32,13 +32,13 @@ wsl --install
 如果已安装 WSL 但没有 `wslc.exe`，更新 WSL：
 
 ```powershell
-wsl --update
+wsl --update --pre-release
 ```
 
 推荐安装：
 
 - Docker CLI，也就是 `docker.exe`。
-- Docker Compose，也就是 `docker-compose.exe`，或 Docker CLI 插件目录里的 `cli-plugins\docker-compose.exe`。
+- Docker Compose，也就是 `docker-compose.exe`，或 Docker CLI 插件目录中的 `%DOCKER_CONFIG%\cli-plugins\docker-compose.exe`，通常是 `%USERPROFILE%\.docker\cli-plugins\docker-compose.exe`。
 
 Docker CLI 和 Compose 对 GUI 不是必须项，但如果要使用 `docker` 或 `docker compose` 连接 WSLC Desktop，就需要安装。
 
@@ -57,7 +57,7 @@ GitHub Releases 会发布两种 Windows 分发包：
 
 1. 如果 `wslc.exe` 可用，应用会启动 daemon 并进入 GUI。
 2. 如果没有 WSL，应用会弹出必须处理的对话框，并给出 `wsl --install`。这一步会阻塞正常使用。
-3. 如果有 WSL 但没有 `wslc.exe`，应用会认为 WSL 版本过旧，并给出 `wsl --update`。这一步也会阻塞正常使用。
+3. 如果有 WSL 但没有 `wslc.exe`，应用会认为 WSL 版本过旧，并给出 `wsl --update --pre-release`。这一步也会阻塞正常使用。
 4. 如果缺少 Docker CLI，应用只会弹出可关闭提示。你可以跳过并继续使用 GUI。
 
 后续可以在 `Settings -> CLI tools` 安装 Docker CLI 辅助工具。
@@ -68,7 +68,7 @@ GitHub Releases 会发布两种 Windows 分发包：
 - 网络不稳定时，手动选择 Docker CLI zip 安装。
 - 从 GitHub 下载最新 Docker Compose。
 - 手动选择本地 Compose exe 安装。
-- 同时安装 Compose 到 `bin\docker-compose.exe` 和 `bin\cli-plugins\docker-compose.exe`。
+- 同时安装 Compose 到应用工具目录的独立 `bin\docker-compose.exe`，以及 Docker CLI 插件目录 `%DOCKER_CONFIG%\cli-plugins\docker-compose.exe`；未设置 `DOCKER_CONFIG` 时使用 `%USERPROFILE%\.docker\cli-plugins\docker-compose.exe`。
 - 将工具 `bin` 目录添加到用户 PATH 或系统 PATH。
 
 ## 使用 GUI
@@ -80,7 +80,7 @@ GitHub Releases 会发布两种 Windows 分发包：
 - 数据卷：查看、创建和删除命名数据卷。
 - 网络：查看容器发布端口并打开端点 URL。
 - Compose：打开 Compose 文件，预览服务计划，创建并启动服务。
-- 设置：配置运行时 Provider、WSLC 代理和镜像设置、Docker API backend、daemon 控制、CLI 工具安装、开机启动、语言和诊断。
+- 设置：配置运行时 Provider、WSLC 代理和镜像仓库地址、Docker API backend、daemon 控制、CLI 工具安装、开机启动、语言和诊断。
 
 daemon 控制可以在设置页和标题栏运行状态浮层中使用。系统托盘也提供快捷操作。点击窗口关闭按钮会隐藏到托盘；从托盘选择退出会同时退出 UI 并关闭 `wslcd-desktop`。
 
@@ -187,7 +187,7 @@ WSLC backend 下需要注意：
 运行：
 
 ```powershell
-wsl --update
+wsl --update --pre-release
 ```
 
 如果 WSL 本身不存在，运行：
@@ -228,7 +228,7 @@ docker --context wslc-desktop ps -a
 
 ### 修改运行时设置后没有生效
 
-从设置页或标题栏运行状态浮层重启 `wslcd-desktop`。代理、镜像代理、runtime provider 和 Docker API backend 设置会在 daemon 启动时生效。
+从设置页或标题栏运行状态浮层重启 `wslcd-desktop`。代理、镜像仓库地址、runtime provider 和 Docker API backend 设置会在 daemon 启动时生效。
 
 ### 需要日志或诊断
 

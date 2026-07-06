@@ -1,9 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Windows.System;
+using wslc_desktop.Models;
 using wslc_desktop.Services;
 using wslc_desktop.ViewModels;
 
@@ -39,60 +40,13 @@ public sealed partial class ContainersPage : Page
     private async void CreateContainer_Click(object sender, RoutedEventArgs e)
     {
         var imageSuggestions = await LoadContainerImageSuggestionsAsync();
-        var imageBox = CreateImageAutoSuggestBox("ContainerImageInput", AppServices.Strings.Get("CreateContainerImage"), _viewModel.NewContainerImage, imageSuggestions);
-        var nameBox = CreateDialogTextBox("ContainerNameInput", AppServices.Strings.Get("CreateContainerName"), _viewModel.NewContainerName);
-        var commandBox = CreateDialogTextBox("ContainerCommandInput", AppServices.Strings.Get("CreateContainerCommand"), _viewModel.NewContainerCommand);
-        var portsBox = CreateDialogTextBox("ContainerPortsInput", AppServices.Strings.Get("CreateContainerPorts"), _viewModel.NewContainerPort);
-        var mountsBox = CreateDialogTextBox("ContainerMountsInput", AppServices.Strings.Get("CreateContainerMounts"), _viewModel.NewContainerMounts);
-        var environmentBox = CreateDialogTextBox("ContainerEnvironmentInput", AppServices.Strings.Get("CreateContainerEnvironment"), _viewModel.NewContainerEnvironment);
-
-        var content = new StackPanel
-        {
-            Spacing = 12,
-            MinWidth = 520,
-            Children =
-            {
-                imageBox,
-                nameBox,
-                commandBox,
-                portsBox,
-                mountsBox,
-                environmentBox
-            }
-        };
-
-        var dialog = new ContentDialog
-        {
-            XamlRoot = XamlRoot,
-            Title = AppServices.Strings.Get("CreateContainerTitle"),
-            Content = content,
-            PrimaryButtonText = AppServices.Strings.Get("Create"),
-            CloseButtonText = AppServices.Strings.Get("Cancel"),
-            DefaultButton = ContentDialogButton.Primary
-        };
-        dialog.IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(imageBox.Text);
-        imageBox.TextChanged += (_, args) =>
-        {
-            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
-            {
-                imageBox.ItemsSource = ContainerImageSuggestionProvider.Filter(imageSuggestions, imageBox.Text);
-            }
-
-            dialog.IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(imageBox.Text);
-        };
-
-        var result = await dialog.ShowAsync();
-        if (result != ContentDialogResult.Primary)
+        ContainerCreateDraft? draft = await ContainerCreateDialog.ShowAsync(XamlRoot, _viewModel.CreateDraft(), imageSuggestions);
+        if (draft is null)
         {
             return;
         }
 
-        _viewModel.NewContainerImage = imageBox.Text;
-        _viewModel.NewContainerName = nameBox.Text;
-        _viewModel.NewContainerCommand = commandBox.Text;
-        _viewModel.NewContainerPort = portsBox.Text;
-        _viewModel.NewContainerMounts = mountsBox.Text;
-        _viewModel.NewContainerEnvironment = environmentBox.Text;
+        _viewModel.ApplyCreateDraft(draft);
         await _viewModel.CreateAsync();
     }
 
@@ -183,39 +137,6 @@ public sealed partial class ContainersPage : Page
 
         e.Handled = true;
         await _viewModel.SendTerminalInputLineAsync();
-    }
-
-    private static TextBox CreateDialogTextBox(string automationId, string header, string text)
-    {
-        var textBox = new TextBox
-        {
-            Header = header,
-            Text = text
-        };
-
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(textBox, automationId);
-        return textBox;
-    }
-
-    private static AutoSuggestBox CreateImageAutoSuggestBox(string automationId, string header, string text, IReadOnlyList<string> suggestions)
-    {
-        var box = new AutoSuggestBox
-        {
-            Header = header,
-            Text = text,
-            ItemsSource = ContainerImageSuggestionProvider.Filter(suggestions, text),
-            MaxSuggestionListHeight = 240
-        };
-        box.SuggestionChosen += (_, args) =>
-        {
-            if (args.SelectedItem is string imageReference)
-            {
-                box.Text = imageReference;
-            }
-        };
-
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(box, automationId);
-        return box;
     }
 
     private void ShowDetailPane(SelectorBarItem? selectedItem)

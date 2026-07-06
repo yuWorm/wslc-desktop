@@ -76,9 +76,9 @@ public sealed class EnvironmentBootstrapService : IEnvironmentBootstrapService
 
     private string FindComposePath()
     {
-        foreach (string directory in _paths.GetCandidateBinDirectories())
+        foreach (string directory in _paths.GetCandidateComposePluginDirectories())
         {
-            string pluginPath = Path.Combine(directory, "cli-plugins", "docker-compose.exe");
+            string pluginPath = Path.Combine(directory, "docker-compose.exe");
             if (File.Exists(pluginPath))
             {
                 return pluginPath;

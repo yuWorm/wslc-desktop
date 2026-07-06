@@ -18,9 +18,9 @@ public sealed class ImagePullTaskViewModel : ViewModelBase
     private double _progressValue;
     private bool _isIndeterminate = true;
 
-    public ImagePullTaskViewModel(string reference, DateTimeOffset startedAt, string statusText)
+    public ImagePullTaskViewModel(string reference, DateTimeOffset startedAt, string statusText, string? id = null)
     {
-        Id = Guid.NewGuid().ToString("N");
+        Id = string.IsNullOrWhiteSpace(id) ? Guid.NewGuid().ToString("N") : id.Trim();
         Reference = reference.Trim();
         StartedAt = startedAt;
         _state = ImagePullTaskState.Queued;

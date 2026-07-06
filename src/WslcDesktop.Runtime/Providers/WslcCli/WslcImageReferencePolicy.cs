@@ -5,12 +5,23 @@ public static class WslcImageReferencePolicy
     public static string ApplyMirror(string reference, WslcRuntimeSettings settings)
     {
         string normalized = NormalizeReference(reference);
-        if (string.IsNullOrWhiteSpace(settings.ImageMirror) || IsQualifiedReference(normalized))
+        if (string.IsNullOrWhiteSpace(settings.ImageMirror))
         {
             return normalized;
         }
 
-        return $"{settings.ImageMirror.TrimEnd('/')}/{normalized}";
+        string mirror = settings.ImageMirror.TrimEnd('/');
+        if (!IsQualifiedReference(normalized))
+        {
+            return $"{mirror}/{normalized}";
+        }
+
+        if (!IsDockerHubQualifiedReference(normalized))
+        {
+            return normalized;
+        }
+
+        return $"{mirror}/{StripRegistryHost(normalized)}";
     }
 
     public static string GetRewriteTarget(string reference, WslcRuntimeSettings settings)
@@ -60,5 +71,13 @@ public static class WslcImageReferencePolicy
         return host.Equals("docker.io", StringComparison.OrdinalIgnoreCase) ||
             host.Equals("registry-1.docker.io", StringComparison.OrdinalIgnoreCase) ||
             host.Equals("index.docker.io", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string StripRegistryHost(string reference)
+    {
+        int slash = reference.IndexOf('/', StringComparison.Ordinal);
+        return slash > 0 && slash < reference.Length - 1
+            ? reference[(slash + 1)..]
+            : reference;
     }
 }

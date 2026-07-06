@@ -101,6 +101,11 @@ public sealed class WslcdNativeClient : IWslcdNativeClient, IDisposable
         return GetJsonAsync<IReadOnlyList<ImageSummaryDto>>("/v1/images", cancellationToken);
     }
 
+    public Task<IReadOnlyList<ImagePullTaskDto>> ListImagePullTasksAsync(CancellationToken cancellationToken = default)
+    {
+        return GetJsonAsync<IReadOnlyList<ImagePullTaskDto>>("/v1/images/pull/tasks", cancellationToken);
+    }
+
     public Task<IReadOnlyList<ImagePullProgressDto>> PullImageAsync(ImagePullRequest request, CancellationToken cancellationToken = default)
     {
         return PostJsonAsync<ImagePullRequest, IReadOnlyList<ImagePullProgressDto>>("/v1/images/pull", request, cancellationToken);

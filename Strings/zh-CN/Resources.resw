@@ -156,12 +156,22 @@
   <data name="ComposeOpenButtonText.Text" xml:space="preserve"><value>打开 Compose</value></data>
   <data name="ComposeCreateStartButtonText.Text" xml:space="preserve"><value>创建并启动</value></data>
   <data name="ComposePreviewInfo.Title" xml:space="preserve"><value>Compose 预览</value></data>
-  <data name="ComposeEmptyInfo.Title" xml:space="preserve"><value>没有 Compose 计划</value></data>
-  <data name="ComposeEmptyInfo.Message" xml:space="preserve"><value>打开 compose.yaml 或 compose.yml 文件以生成服务计划。</value></data>
+  <data name="ComposeEmptyInfo.Title" xml:space="preserve"><value>没有 Compose 项目</value></data>
+  <data name="ComposeEmptyInfo.Message" xml:space="preserve"><value>打开 compose.yaml 文件，或通过 docker compose 创建项目。</value></data>
   <data name="ComposeSelectedFileInput.Header" xml:space="preserve"><value>已选择文件</value></data>
   <data name="ComposeProjectsHeading.Text" xml:space="preserve"><value>项目</value></data>
+  <data name="ComposeProjectDetailsHeading.Text" xml:space="preserve"><value>项目详情</value></data>
+  <data name="ComposeProjectStartCommand.Label" xml:space="preserve"><value>启动</value></data>
+  <data name="ComposeProjectStopCommand.Label" xml:space="preserve"><value>停止</value></data>
+  <data name="ComposeProjectRestartCommand.Label" xml:space="preserve"><value>重启</value></data>
+  <data name="ComposeProjectDeleteCommand.Label" xml:space="preserve"><value>删除</value></data>
+  <data name="ComposeServicesHeading.Text" xml:space="preserve"><value>服务</value></data>
+  <data name="ComposeContainersHeading.Text" xml:space="preserve"><value>容器</value></data>
+  <data name="ComposeColumnContainers.Text" xml:space="preserve"><value>容器</value></data>
+  <data name="ComposeColumnState.Text" xml:space="preserve"><value>状态</value></data>
   <data name="ComposeGeneratedPlanHeading.Text" xml:space="preserve"><value>生成的计划</value></data>
   <data name="ColumnService.Text" xml:space="preserve"><value>服务</value></data>
+  <data name="ColumnImage.Text" xml:space="preserve"><value>镜像</value></data>
   <data name="ColumnMounts.Text" xml:space="preserve"><value>挂载</value></data>
   <data name="ComposeUnsupportedRun.Text" xml:space="preserve"><value> · 不支持：</value></data>
   <data name="SettingsTitle.Text" xml:space="preserve"><value>设置</value></data>
@@ -176,7 +186,8 @@
   <data name="SettingsCliToolsHeading.Text" xml:space="preserve"><value>CLI 工具</value></data>
   <data name="SettingsCliToolsDescription.Text" xml:space="preserve"><value>安装外部 docker 和 docker compose 命令使用的 Docker CLI 辅助工具。</value></data>
   <data name="SettingsCliToolsStatusInfo.Title" xml:space="preserve"><value>CLI 工具状态</value></data>
-  <data name="SettingsCliToolsBinLabel.Text" xml:space="preserve"><value>安装目录</value></data>
+  <data name="SettingsCliToolsBinLabel.Text" xml:space="preserve"><value>工具 bin 目录</value></data>
+  <data name="SettingsCliToolsComposePluginLabel.Text" xml:space="preserve"><value>Compose 插件目录</value></data>
   <data name="SettingsCliToolsRefreshText.Text" xml:space="preserve"><value>刷新</value></data>
   <data name="SettingsCliToolsManageText.Text" xml:space="preserve"><value>安装 / 管理 CLI 工具</value></data>
   <data name="SettingsCliToolsDockerContextText.Text" xml:space="preserve"><value>使用 WSLC Desktop Docker context</value></data>
@@ -190,14 +201,14 @@
   <data name="SettingsRuntimeProvider.Header" xml:space="preserve"><value>Provider</value></data>
   <data name="SettingsRuntimeProviderWslcCli.Content" xml:space="preserve"><value>WSLC CLI</value></data>
   <data name="SettingsRuntimeProviderDockerApi.Content" xml:space="preserve"><value>Docker API</value></data>
-  <data name="SettingsWslcSpecialDescription.Text" xml:space="preserve"><value>WSLC CLI 命令会通过 daemon 进程继承这些代理、镜像和环境变量设置。</value></data>
+  <data name="SettingsWslcSpecialDescription.Text" xml:space="preserve"><value>WSLC CLI 命令会通过 daemon 进程继承这些代理、镜像仓库地址和环境变量设置。</value></data>
   <data name="SettingsWslcHttpProxy.Header" xml:space="preserve"><value>HTTP 代理</value></data>
   <data name="SettingsWslcHttpProxy.PlaceholderText" xml:space="preserve"><value>http://127.0.0.1:7890</value></data>
   <data name="SettingsWslcHttpsProxy.Header" xml:space="preserve"><value>HTTPS 代理</value></data>
   <data name="SettingsWslcHttpsProxy.PlaceholderText" xml:space="preserve"><value>http://127.0.0.1:7890</value></data>
   <data name="SettingsWslcNoProxy.Header" xml:space="preserve"><value>NO_PROXY</value></data>
   <data name="SettingsWslcNoProxy.PlaceholderText" xml:space="preserve"><value>localhost,127.0.0.1,.local</value></data>
-  <data name="SettingsWslcImageMirror.Header" xml:space="preserve"><value>镜像代理</value></data>
+  <data name="SettingsWslcImageMirror.Header" xml:space="preserve"><value>镜像仓库地址</value></data>
   <data name="SettingsWslcImageMirror.PlaceholderText" xml:space="preserve"><value>registry.example.com/library</value></data>
   <data name="SettingsWslcRewriteImageTag.Header" xml:space="preserve"><value>拉取后重命名镜像 tag</value></data>
   <data name="SettingsWslcRemoveRewrittenSourceTag.Header" xml:space="preserve"><value>重命名后删除原 tag</value></data>

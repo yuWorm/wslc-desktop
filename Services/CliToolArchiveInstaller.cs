@@ -40,6 +40,16 @@ public static class CliToolArchiveInstaller
         string binDirectory,
         CancellationToken cancellationToken = default)
     {
+        string pluginDirectory = new CliToolPathResolver().UserDockerCliPluginDirectory;
+        return await InstallComposeFromExeAsync(exePath, binDirectory, pluginDirectory, cancellationToken);
+    }
+
+    public static async Task<CliToolInstallResult> InstallComposeFromExeAsync(
+        string exePath,
+        string binDirectory,
+        string pluginDirectory,
+        CancellationToken cancellationToken = default)
+    {
         if (!File.Exists(exePath))
         {
             throw new FileNotFoundException("Docker Compose executable was not found.", exePath);
@@ -47,7 +57,6 @@ public static class CliToolArchiveInstaller
 
         Directory.CreateDirectory(binDirectory);
         string standalonePath = Path.Combine(binDirectory, "docker-compose.exe");
-        string pluginDirectory = Path.Combine(binDirectory, "cli-plugins");
         Directory.CreateDirectory(pluginDirectory);
         string pluginPath = Path.Combine(pluginDirectory, "docker-compose.exe");
 
