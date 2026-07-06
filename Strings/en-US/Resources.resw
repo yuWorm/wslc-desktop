@@ -8,9 +8,9 @@
   <data name="StartupOverlayTitle.Text" xml:space="preserve"><value>Checking WSLC</value></data>
   <data name="StartupOverlayDescription.Text" xml:space="preserve"><value>Verifying the Windows system-level container runtime before opening the app.</value></data>
   <data name="WslcRequiredDialogTitle" xml:space="preserve"><value>WSLC is required</value></data>
-  <data name="WslcRequiredMissingWslMessage" xml:space="preserve"><value>WSL is not installed. Update or install WSL before using WSLC Desktop.</value></data>
-  <data name="WslcRequiredUpdateRequiredMessage" xml:space="preserve"><value>WSL is installed, but wslc.exe is missing. Update WSL to the latest version, then install WSLC if required.</value></data>
-  <data name="WslcRequiredUpdateRequiredWithVersion" xml:space="preserve"><value>WSL is installed, but wslc.exe is missing. Update WSL to the latest version, then install WSLC if required. Detected: {0}</value></data>
+  <data name="WslcRequiredMissingWslMessage" xml:space="preserve"><value>WSLC currently requires the WSL pre-release build. Install or update WSL with the commands below before using WSLC Desktop.</value></data>
+  <data name="WslcRequiredUpdateRequiredMessage" xml:space="preserve"><value>WSL is installed, but wslc.exe is missing. Update WSL to the pre-release build, then install WSLC if required.</value></data>
+  <data name="WslcRequiredUpdateRequiredWithVersion" xml:space="preserve"><value>WSL is installed, but wslc.exe is missing. Update WSL to the pre-release build, then install WSLC if required. Detected: {0}</value></data>
   <data name="WslcRequiredTimedOutMessage" xml:space="preserve"><value>WSLC prerequisite check timed out. Run the commands below, then recheck.</value></data>
   <data name="WslcRequiredCommandHeader" xml:space="preserve"><value>Run these commands in Windows Terminal, one line at a time:</value></data>
   <data name="Recheck" xml:space="preserve"><value>Recheck</value></data>

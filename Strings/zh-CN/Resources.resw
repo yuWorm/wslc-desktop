@@ -8,9 +8,9 @@
   <data name="StartupOverlayTitle.Text" xml:space="preserve"><value>正在检测 WSLC</value></data>
   <data name="StartupOverlayDescription.Text" xml:space="preserve"><value>正在验证 Windows 系统级容器运行时，通过后再进入应用。</value></data>
   <data name="WslcRequiredDialogTitle" xml:space="preserve"><value>需要 WSLC</value></data>
-  <data name="WslcRequiredMissingWslMessage" xml:space="preserve"><value>未检测到 WSL。请先更新或安装 WSL，然后再使用 WSLC Desktop。</value></data>
-  <data name="WslcRequiredUpdateRequiredMessage" xml:space="preserve"><value>已检测到 WSL，但缺少 wslc.exe。请先将 WSL 更新到最新版本，如仍缺失再安装 WSLC。</value></data>
-  <data name="WslcRequiredUpdateRequiredWithVersion" xml:space="preserve"><value>已检测到 WSL，但缺少 wslc.exe。请先将 WSL 更新到最新版本，如仍缺失再安装 WSLC。检测到：{0}</value></data>
+  <data name="WslcRequiredMissingWslMessage" xml:space="preserve"><value>WSLC 目前需要 WSL 预览版。请先使用下面的命令安装或更新 WSL，然后再使用 WSLC Desktop。</value></data>
+  <data name="WslcRequiredUpdateRequiredMessage" xml:space="preserve"><value>已检测到 WSL，但缺少 wslc.exe。请先将 WSL 更新到预览版，如仍缺失再安装 WSLC。</value></data>
+  <data name="WslcRequiredUpdateRequiredWithVersion" xml:space="preserve"><value>已检测到 WSL，但缺少 wslc.exe。请先将 WSL 更新到预览版，如仍缺失再安装 WSLC。检测到：{0}</value></data>
   <data name="WslcRequiredTimedOutMessage" xml:space="preserve"><value>WSLC 前置检查超时。请运行下面的命令，然后重新检测。</value></data>
   <data name="WslcRequiredCommandHeader" xml:space="preserve"><value>请在 Windows Terminal 中逐行运行这些命令：</value></data>
   <data name="Recheck" xml:space="preserve"><value>重新检测</value></data>

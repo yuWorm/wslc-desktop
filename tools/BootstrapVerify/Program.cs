@@ -2,7 +2,7 @@ using System.IO.Compression;
 using wslc_desktop.Models;
 using wslc_desktop.Services;
 
-string requiredWslSetupCommands = string.Join(Environment.NewLine, "wsl --update", "wsl --install");
+string requiredWslSetupCommands = string.Join(Environment.NewLine, "wsl --update --pre-release", "wsl --install");
 var englishStrings = new AppStringLocalizer(AppLanguage.English);
 var chineseStrings = new AppStringLocalizer(AppLanguage.Chinese);
 Expect(englishStrings.Get("WslcRequiredMissingWslMessage") != "WslcRequiredMissingWslMessage", "English localizer must include WSLC required missing-WSL dialog content.");

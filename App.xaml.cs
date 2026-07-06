@@ -244,19 +244,37 @@ public partial class App : Application
                 TextWrapping = TextWrapping.WrapWholeWords
             });
 
+            panel.Children.Add(CreateCommandLinesPanel(command));
+        }
+
+        return panel;
+    }
+
+    private static StackPanel CreateCommandLinesPanel(string command)
+    {
+        var panel = new StackPanel
+        {
+            Spacing = 8
+        };
+
+        foreach (string line in SplitCommandLines(command))
+        {
             panel.Children.Add(new TextBox
             {
-                Text = command,
+                Text = line,
                 IsReadOnly = true,
-                AcceptsReturn = true,
                 TextWrapping = TextWrapping.NoWrap,
-                MinHeight = 72,
-                MaxHeight = 160,
                 FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Mono")
             });
         }
 
         return panel;
+    }
+
+    private static IReadOnlyList<string> SplitCommandLines(string command)
+    {
+        return command.Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
     private static XamlRoot? GetXamlRoot(Window window)

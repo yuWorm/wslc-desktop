@@ -4,7 +4,7 @@ namespace wslc_desktop.Services;
 
 public static class BootstrapPrerequisiteEvaluator
 {
-    private static string RequiredWslSetupCommands => string.Join(Environment.NewLine, "wsl --update", "wsl --install");
+    private static string RequiredWslSetupCommands => string.Join(Environment.NewLine, "wsl --update --pre-release", "wsl --install");
 
     public static WslcPrerequisiteStatus EvaluateWslc(
         bool wslExists,

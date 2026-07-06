@@ -123,9 +123,13 @@ foreach ($needle in @("TimeSpan.FromSeconds(5)", "CancelAfter", "OperationCancel
     Require-Contains $bootstrap ([regex]::Escape($needle)) "WSLC prerequisite probing must enforce timeout item $needle."
 }
 
-foreach ($needle in @("wsl --install", "wsl --update", "WslUpdateRequired", "MissingWsl", "CheckTimedOut", "CreateWslcCheckTimedOut")) {
+foreach ($needle in @("wsl --install", "wsl --update --pre-release", "WslUpdateRequired", "MissingWsl", "CheckTimedOut", "CreateWslcCheckTimedOut")) {
     Require-Contains $evaluator ([regex]::Escape($needle)) "WSLC prerequisite evaluator must contain $needle."
 }
+Require-NotContains $evaluator '"wsl --update"\s*,\s*"wsl --install"' "WSLC prerequisite evaluator must use the pre-release WSL update command."
+Require-Contains $app 'CreateCommandLinesPanel' "WSLC required dialog must render command lines individually."
+Require-Contains $app 'SplitCommandLines' "WSLC required dialog must split multi-line commands for display."
+Require-NotContains $app 'AcceptsReturn\s*=\s*true' "WSLC required dialog must not rely on a single multi-line TextBox for command display."
 
 foreach ($needle in @("https://download.docker.com/win/static/stable/x86_64/", "https://api.github.com/repos/docker/compose/releases/latest", "InstallLatestDockerCliAsync", "InstallLatestComposeAsync", "AddBinToUserPath", "AddBinToMachinePathAsync", "runas")) {
     Require-Contains $installer ([regex]::Escape($needle)) "CLI tool installer must contain $needle."
@@ -171,7 +175,7 @@ foreach ($needle in @("StartupOverlayTitle.Text", "StartupOverlayDescription.Tex
     Require-Contains $zh ([regex]::Escape($needle)) "Chinese resources must contain $needle."
 }
 
-foreach ($needle in @("English localizer must include WSLC required missing-WSL dialog content", "Chinese localizer must include WSLC required missing-WSL dialog content", "Missing WSL must list update and install commands one per line", "Old WSL must list update and install commands one per line", "Timed-out WSLC checks must list update and install commands one per line", "Default settings must force the first-run WSLC gate", "Settings must persist the successful WSLC initialization marker", "Docker CLI installer must not copy dockerd.exe", "Compose installer must install Docker CLI plugin")) {
+foreach ($needle in @("wsl --update --pre-release", "English localizer must include WSLC required missing-WSL dialog content", "Chinese localizer must include WSLC required missing-WSL dialog content", "Missing WSL must list update and install commands one per line", "Old WSL must list update and install commands one per line", "Timed-out WSLC checks must list update and install commands one per line", "Default settings must force the first-run WSLC gate", "Settings must persist the successful WSLC initialization marker", "Docker CLI installer must not copy dockerd.exe", "Compose installer must install Docker CLI plugin")) {
     Require-Contains $bootstrapVerify ([regex]::Escape($needle)) "BootstrapVerify must assert $needle."
 }
 
