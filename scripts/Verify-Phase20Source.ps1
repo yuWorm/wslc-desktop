@@ -163,6 +163,12 @@ Assert-Contains $fullVerify "LocalizationVerify" "Full release verifier must inc
 Assert-Contains $fullVerify "ComposePlanVerify" "Full release verifier must include compose plan verification."
 Assert-Contains $fullVerify "HardeningVerify" "Full release verifier must include hardening verification."
 Assert-Contains $fullVerify "Build-ReleaseArtifacts\.ps1" "Full release verifier must include Setup.exe and portable.zip artifact creation."
+Assert-Contains $artifactScript "Remove-ReleasePayloadFiles" "Release artifact script must remove unused payload files from portable/setup layouts."
+Assert-Contains $artifactScript "onnxruntime\.dll" "Release artifact script must remove unused ONNX runtime payloads."
+Assert-Contains $artifactScript "DirectML\.dll" "Release artifact script must remove unused DirectML payloads."
+Assert-Contains $artifactScript "Microsoft\.Windows\.AI\.MachineLearning\.dll" "Release artifact script must remove unused Windows AI MachineLearning payloads."
+Assert-Contains $artifactScript "Microsoft\.Windows\.AI\.MachineLearning\.Projection\.dll" "Release artifact script must remove unused Windows AI projection payloads."
+Assert-Contains $artifactScript "Microsoft\.ML\.OnnxRuntime\.dll" "Release artifact script must remove unused managed ONNX payloads."
 
 Assert-Contains $releaseNotes "Docker API coverage" "Release notes must document Docker API coverage."
 Assert-Contains $releaseNotes "Unsupported" "Release notes must document unsupported endpoints."

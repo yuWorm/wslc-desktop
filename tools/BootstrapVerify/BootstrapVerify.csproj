@@ -10,6 +10,7 @@
     <Compile Include="..\..\Models\WslcDomainModels.cs" Link="Models\WslcDomainModels.cs" />
     <Compile Include="..\..\Models\TerminalSessionModels.cs" Link="Models\TerminalSessionModels.cs" />
     <Compile Include="..\..\Services\BootstrapPrerequisiteEvaluator.cs" Link="Services\BootstrapPrerequisiteEvaluator.cs" />
+    <Compile Include="..\..\Services\AppStringLocalizer.cs" Link="Services\AppStringLocalizer.cs" />
     <Compile Include="..\..\Services\AppLanguage.cs" Link="Services\AppLanguage.cs" />
     <Compile Include="..\..\Services\DockerStaticReleaseIndex.cs" Link="Services\DockerStaticReleaseIndex.cs" />
     <Compile Include="..\..\Services\CliToolArchiveInstaller.cs" Link="Services\CliToolArchiveInstaller.cs" />

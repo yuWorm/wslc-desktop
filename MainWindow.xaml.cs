@@ -247,6 +247,7 @@ public sealed partial class MainWindow : Window
 
         AppLaunchLogger.Info("Runtime prerequisites are ready; entering application shell.");
         RuntimePrerequisitesReady = true;
+        HideStartupOverlay();
         NavView.IsEnabled = true;
         NavView.SelectedItem = NavContainers;
 
@@ -254,6 +255,16 @@ public sealed partial class MainWindow : Window
         {
             NavFrame.Navigate(typeof(ContainersPage));
         }
+    }
+
+    public void ShowStartupOverlay()
+    {
+        StartupOverlay.Visibility = Visibility.Visible;
+    }
+
+    public void HideStartupOverlay()
+    {
+        StartupOverlay.Visibility = Visibility.Collapsed;
     }
 
     public async Task StartShellStatusPollingAsync()

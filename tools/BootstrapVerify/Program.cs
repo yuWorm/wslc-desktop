@@ -2,12 +2,20 @@ using System.IO.Compression;
 using wslc_desktop.Models;
 using wslc_desktop.Services;
 
+string requiredWslSetupCommands = string.Join(Environment.NewLine, "wsl --update", "wsl --install");
+var englishStrings = new AppStringLocalizer(AppLanguage.English);
+var chineseStrings = new AppStringLocalizer(AppLanguage.Chinese);
+Expect(englishStrings.Get("WslcRequiredMissingWslMessage") != "WslcRequiredMissingWslMessage", "English localizer must include WSLC required missing-WSL dialog content.");
+Expect(chineseStrings.Get("WslcRequiredMissingWslMessage") != "WslcRequiredMissingWslMessage", "Chinese localizer must include WSLC required missing-WSL dialog content.");
+Expect(englishStrings.Get("WslcRequiredCommandHeader") != "WslcRequiredCommandHeader", "English localizer must include the WSLC required command header.");
+Expect(chineseStrings.Get("WslcRequiredCommandHeader") != "WslcRequiredCommandHeader", "Chinese localizer must include the WSLC required command header.");
+
 var missingWsl = BootstrapPrerequisiteEvaluator.EvaluateWslc(
     wslExists: false,
     wslcExists: false,
     wslVersionOutput: string.Empty);
 Expect(missingWsl.State == WslcPrerequisiteState.MissingWsl, "Missing WSL must be classified.");
-Expect(missingWsl.RequiredCommand == "wsl --install", "Missing WSL must recommend wsl --install.");
+Expect(missingWsl.RequiredCommand == requiredWslSetupCommands, "Missing WSL must list update and install commands one per line.");
 Expect(!missingWsl.IsReady, "Missing WSL must block startup.");
 
 var oldWsl = BootstrapPrerequisiteEvaluator.EvaluateWslc(
@@ -15,7 +23,7 @@ var oldWsl = BootstrapPrerequisiteEvaluator.EvaluateWslc(
     wslcExists: false,
     wslVersionOutput: "WSL version: 2.5.7");
 Expect(oldWsl.State == WslcPrerequisiteState.WslUpdateRequired, "Old WSL must be classified when wslc is absent.");
-Expect(oldWsl.RequiredCommand == "wsl --update", "Old WSL must recommend wsl --update.");
+Expect(oldWsl.RequiredCommand == requiredWslSetupCommands, "Old WSL must list update and install commands one per line.");
 Expect(oldWsl.DetectedVersion == "WSL version: 2.5.7", "Old WSL status must preserve detected version output.");
 
 var readyWslc = BootstrapPrerequisiteEvaluator.EvaluateWslc(
@@ -28,6 +36,7 @@ Expect(readyWslc.State == WslcPrerequisiteState.Ready, "wslc presence must be re
 var timedOutWslc = BootstrapPrerequisiteEvaluator.CreateWslcCheckTimedOut(TimeSpan.FromSeconds(5));
 Expect(timedOutWslc.State == WslcPrerequisiteState.CheckTimedOut, "Timed-out WSLC checks must be classified.");
 Expect(!timedOutWslc.IsReady, "Timed-out WSLC checks must block startup.");
+Expect(timedOutWslc.RequiredCommand == requiredWslSetupCommands, "Timed-out WSLC checks must list update and install commands one per line.");
 Expect(timedOutWslc.Message.Contains("timed out", StringComparison.OrdinalIgnoreCase), "Timed-out WSLC checks must explain the timeout.");
 
 AppSettingsSnapshot defaultSettings = FileAppSettingsService.CreateDefault();

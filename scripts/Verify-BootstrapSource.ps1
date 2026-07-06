@@ -87,6 +87,8 @@ foreach ($needle in @("RunStartupBootstrapAsync", "EnsureWslcPrerequisiteAsync",
 Require-Contains $startupBootstrap 'EnsureWslcPrerequisiteAsync[\s\S]*StartDaemonOnLaunchAsync' "App must gate daemon startup behind the wslc prerequisite check."
 Require-Contains $startupBootstrap 'EnsureWslcPrerequisiteAsync[\s\S]*EnterApplicationShell' "App must only enter the navigable shell after the wslc prerequisite check succeeds."
 Require-NotContains $startupBootstrap 'EnterApplicationShell[\s\S]*EnsureWslcPrerequisiteAsync' "App must not enter the navigable shell before checking the wslc prerequisite."
+Require-NotContains $app 'CloseButtonText\s*=' "WSLC required dialog must not expose a close button."
+Require-NotContains $app 'Application\.Current\.Exit\(\)' "WSLC required dialog must stay mandatory instead of exiting from App bootstrap."
 foreach ($needle in @("WslcPrerequisiteInitialized", "MarkWslcPrerequisiteInitializedAsync", "CheckWslcWithStartupTimeoutAsync")) {
     Require-Contains $app ([regex]::Escape($needle)) "App startup must contain first-run prerequisite gate item $needle."
 }
@@ -94,10 +96,20 @@ foreach ($needle in @("WslcPrerequisiteInitialized", "MarkWslcPrerequisiteInitia
 foreach ($needle in @("RuntimePrerequisitesReady", "EnterApplicationShell", "StartShellStatusPollingAsync")) {
     Require-Contains $mainWindowCode ([regex]::Escape($needle)) "MainWindow must contain the startup gate member $needle."
 }
+foreach ($needle in @("ShowStartupOverlay", "HideStartupOverlay")) {
+    Require-Contains $mainWindowCode ([regex]::Escape($needle)) "MainWindow must expose $needle for startup prerequisite feedback."
+}
 Require-NotContains $mainWindowConstructor 'NavFrame\.Navigate' "MainWindow constructor must not navigate before WSLC is verified."
 Require-NotContains $mainWindowLoaded 'RefreshShellStatusAsync' "MainWindow.Loaded must not refresh daemon status before WSLC is verified."
 Require-Contains $mainWindowCode 'if\s*\(!RuntimePrerequisitesReady\)' "Navigation must ignore user selection while startup prerequisites are not ready."
 Require-Contains $mainWindowXaml 'x:Name="NavView"[\s\S]*IsEnabled="False"' "NavigationView must remain disabled until startup prerequisites pass."
+Require-Contains $mainWindowXaml 'x:Name="StartupOverlay"' "MainWindow must show a startup overlay while WSLC prerequisites are checked."
+Require-Contains $mainWindowXaml 'ProgressRing[\s\S]*IsActive="True"' "Startup overlay must use an active WinUI ProgressRing."
+Require-Contains $mainWindowXaml 'x:Uid="StartupOverlayTitle"' "Startup overlay title must be localized through x:Uid."
+Require-Contains $mainWindowXaml 'x:Uid="StartupOverlayDescription"' "Startup overlay description must be localized through x:Uid."
+Require-Contains $app 'ShowStartupOverlay[\s\S]*CheckWslcWithStartupTimeoutAsync' "App startup must show the startup overlay before checking WSLC."
+Require-Contains $app 'GetWslcPrerequisiteMessage' "App startup must localize the WSLC required dialog message by prerequisite state."
+Require-NotContains $app 'Content\s*=\s*CreateDialogContent\(status\.Message' "WSLC required dialog must not use raw evaluator English messages directly."
 
 foreach ($needle in @("Bootstrap", "CliTools", "EnvironmentBootstrapService", "CliToolInstallationService", "ProcessCommandProbe", "CliToolPathResolver")) {
     Require-Contains $appServices ([regex]::Escape($needle)) "AppServices must wire $needle."
@@ -151,11 +163,15 @@ foreach ($needle in @("SettingsCliToolsHeading.Text", "SettingsCliToolsStatusInf
     Require-Contains $zh ([regex]::Escape($needle)) "Chinese resources must contain $needle."
 }
 
-foreach ($needle in @("WslcRequiredDialogTitle", "DockerCliOptionalDialogTitle", "CliToolsWslcMissing", "CliToolsPathAdded", "CliToolsSystemPathAdded", "CliToolsDialogTitle", "DockerContextDefaultCreated", "DockerContextDefaultConfirmTitle")) {
+foreach ($needle in @("WslcRequiredDialogTitle", "WslcRequiredMissingWslMessage", "WslcRequiredUpdateRequiredMessage", "WslcRequiredUpdateRequiredWithVersion", "WslcRequiredTimedOutMessage", "WslcRequiredCommandHeader", "DockerCliOptionalDialogTitle", "CliToolsWslcMissing", "CliToolsPathAdded", "CliToolsSystemPathAdded", "CliToolsDialogTitle", "DockerContextDefaultCreated", "DockerContextDefaultConfirmTitle")) {
     Require-Contains $localizer ([regex]::Escape($needle)) "AppStringLocalizer must contain $needle."
 }
+foreach ($needle in @("StartupOverlayTitle.Text", "StartupOverlayDescription.Text", "WslcRequiredDialogTitle", "WslcRequiredMissingWslMessage", "WslcRequiredUpdateRequiredMessage", "WslcRequiredUpdateRequiredWithVersion", "WslcRequiredTimedOutMessage", "WslcRequiredCommandHeader", "Recheck", "CopyCommand")) {
+    Require-Contains $en ([regex]::Escape($needle)) "English resources must contain $needle."
+    Require-Contains $zh ([regex]::Escape($needle)) "Chinese resources must contain $needle."
+}
 
-foreach ($needle in @("Missing WSL must recommend wsl --install", "Old WSL must recommend wsl --update", "Timed-out WSLC checks must be classified", "Default settings must force the first-run WSLC gate", "Settings must persist the successful WSLC initialization marker", "Docker CLI installer must not copy dockerd.exe", "Compose installer must install Docker CLI plugin")) {
+foreach ($needle in @("English localizer must include WSLC required missing-WSL dialog content", "Chinese localizer must include WSLC required missing-WSL dialog content", "Missing WSL must list update and install commands one per line", "Old WSL must list update and install commands one per line", "Timed-out WSLC checks must list update and install commands one per line", "Default settings must force the first-run WSLC gate", "Settings must persist the successful WSLC initialization marker", "Docker CLI installer must not copy dockerd.exe", "Compose installer must install Docker CLI plugin")) {
     Require-Contains $bootstrapVerify ([regex]::Escape($needle)) "BootstrapVerify must assert $needle."
 }
 

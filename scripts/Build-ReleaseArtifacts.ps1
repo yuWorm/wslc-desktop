@@ -55,6 +55,21 @@ function Write-Checksum {
     Write-Host "SHA256: $checksumPath"
 }
 
+function Remove-ReleasePayloadFiles {
+    param(
+        [string]$Directory,
+        [string[]]$FileNames
+    )
+
+    foreach ($fileName in $FileNames) {
+        Get-ChildItem -LiteralPath $Directory -Recurse -File -Filter $fileName -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                Remove-FileIfExists $_.FullName
+                Write-Host "PRUNED_PAYLOAD=$($_.FullName)"
+            }
+    }
+}
+
 function Find-Iscc {
     if (-not [string]::IsNullOrWhiteSpace($env:ISCC_PATH) -and (Test-Path -LiteralPath $env:ISCC_PATH)) {
         return $env:ISCC_PATH
@@ -110,6 +125,13 @@ Get-ChildItem -LiteralPath $ReleaseLayout -Force |
     ForEach-Object {
         Copy-Item -LiteralPath $_.FullName -Destination $DistDir -Recurse -Force
     }
+
+Remove-ReleasePayloadFiles -Directory $DistDir -FileNames @(
+    "onnxruntime.dll",
+    "DirectML.dll",
+    "Microsoft.ML.OnnxRuntime.dll",
+    "Microsoft.Windows.AI.MachineLearning.dll",
+    "Microsoft.Windows.AI.MachineLearning.Projection.dll")
 
 New-Item -ItemType Directory -Force -Path (Join-Path $DistDir "bin") | Out-Null
 

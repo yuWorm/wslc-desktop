@@ -4,6 +4,8 @@ namespace wslc_desktop.Services;
 
 public static class BootstrapPrerequisiteEvaluator
 {
+    private static string RequiredWslSetupCommands => string.Join(Environment.NewLine, "wsl --update", "wsl --install");
+
     public static WslcPrerequisiteStatus EvaluateWslc(
         bool wslExists,
         bool wslcExists,
@@ -28,7 +30,7 @@ public static class BootstrapPrerequisiteEvaluator
             return new WslcPrerequisiteStatus(
                 WslcPrerequisiteState.MissingWsl,
                 false,
-                "wsl --install",
+                RequiredWslSetupCommands,
                 detectedVersion,
                 "WSL is not installed. Install WSL before using WSLC Desktop.");
         }
@@ -36,7 +38,7 @@ public static class BootstrapPrerequisiteEvaluator
         return new WslcPrerequisiteStatus(
             WslcPrerequisiteState.WslUpdateRequired,
             false,
-            "wsl --update",
+            RequiredWslSetupCommands,
             detectedVersion,
             string.IsNullOrWhiteSpace(detectedVersion)
                 ? "WSL is installed, but wslc.exe is missing. Update WSL to the latest version."
@@ -48,9 +50,9 @@ public static class BootstrapPrerequisiteEvaluator
         return new WslcPrerequisiteStatus(
             WslcPrerequisiteState.CheckTimedOut,
             false,
-            "wsl --version; wslc.exe version",
+            RequiredWslSetupCommands,
             string.Empty,
-            $"WSLC prerequisite check timed out after {timeout.TotalSeconds:0} seconds. Run the command manually to verify that WSL and wslc.exe are responsive.");
+            $"WSLC prerequisite check timed out after {timeout.TotalSeconds:0} seconds. Run the commands manually to update or install WSL, then recheck.");
     }
 
     private static string NormalizeVersionOutput(string value)

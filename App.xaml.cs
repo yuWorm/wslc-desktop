@@ -131,6 +131,7 @@ public partial class App : Application
     {
         while (true)
         {
+            mainWindow.ShowStartupOverlay();
             WslcPrerequisiteStatus status = await CheckWslcWithStartupTimeoutAsync();
             if (status.IsReady)
             {
@@ -149,8 +150,7 @@ public partial class App : Application
                 continue;
             }
 
-            Application.Current.Exit();
-            return false;
+            AppLaunchLogger.Info("WSLC prerequisite dialog was dismissed; showing it again because WSLC is required.");
         }
     }
 
@@ -201,14 +201,26 @@ public partial class App : Application
             XamlRoot = GetXamlRoot(mainWindow),
             Style = Current.Resources["DefaultContentDialogStyle"] as Style,
             Title = AppServices.Strings.Get("WslcRequiredDialogTitle"),
-            Content = CreateDialogContent(status.Message, status.RequiredCommand),
+            Content = CreateDialogContent(GetWslcPrerequisiteMessage(status), status.RequiredCommand),
             PrimaryButtonText = AppServices.Strings.Get("Recheck"),
             SecondaryButtonText = AppServices.Strings.Get("CopyCommand"),
-            CloseButtonText = AppServices.Strings.Get("Exit"),
             DefaultButton = ContentDialogButton.Primary
         };
 
         return await dialog.ShowAsync();
+    }
+
+    private static string GetWslcPrerequisiteMessage(WslcPrerequisiteStatus status)
+    {
+        return status.State switch
+        {
+            WslcPrerequisiteState.MissingWsl => AppServices.Strings.Get("WslcRequiredMissingWslMessage"),
+            WslcPrerequisiteState.WslUpdateRequired when !string.IsNullOrWhiteSpace(status.DetectedVersion) =>
+                AppServices.Strings.Format("WslcRequiredUpdateRequiredWithVersion", status.DetectedVersion),
+            WslcPrerequisiteState.WslUpdateRequired => AppServices.Strings.Get("WslcRequiredUpdateRequiredMessage"),
+            WslcPrerequisiteState.CheckTimedOut => AppServices.Strings.Get("WslcRequiredTimedOutMessage"),
+            _ => status.Message
+        };
     }
 
     private static StackPanel CreateDialogContent(string message, string command)
@@ -226,10 +238,20 @@ public partial class App : Application
 
         if (!string.IsNullOrWhiteSpace(command))
         {
+            panel.Children.Add(new TextBlock
+            {
+                Text = AppServices.Strings.Get("WslcRequiredCommandHeader"),
+                TextWrapping = TextWrapping.WrapWholeWords
+            });
+
             panel.Children.Add(new TextBox
             {
                 Text = command,
                 IsReadOnly = true,
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.NoWrap,
+                MinHeight = 72,
+                MaxHeight = 160,
                 FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Mono")
             });
         }

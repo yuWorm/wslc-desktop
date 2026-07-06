@@ -168,6 +168,38 @@
             <Frame x:Name="NavFrame" AutomationProperties.AutomationId="MainFrame" />
         </NavigationView>
 
+        <Grid
+            x:Name="StartupOverlay"
+            AutomationProperties.AutomationId="StartupOverlay"
+            Grid.Row="1"
+            Canvas.ZIndex="100"
+            Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+            <StackPanel
+                Width="420"
+                MaxWidth="420"
+                Padding="32"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="16">
+                <ProgressRing
+                    Width="48"
+                    Height="48"
+                    HorizontalAlignment="Center"
+                    IsActive="True" />
+                <TextBlock
+                    x:Uid="StartupOverlayTitle"
+                    HorizontalAlignment="Center"
+                    Style="{ThemeResource SubtitleTextBlockStyle}"
+                    Text="Checking WSLC" />
+                <TextBlock
+                    x:Uid="StartupOverlayDescription"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="Verifying the Windows system-level container runtime before opening the app."
+                    TextAlignment="Center"
+                    TextWrapping="WrapWholeWords" />
+            </StackPanel>
+        </Grid>
+
         <tb:TaskbarIcon
             x:Name="TrayIcon"
             Width="0"
