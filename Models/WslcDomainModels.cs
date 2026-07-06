@@ -54,7 +54,8 @@ public enum WslcPrerequisiteState
 {
     Ready,
     MissingWsl,
-    WslUpdateRequired
+    WslUpdateRequired,
+    CheckTimedOut
 }
 
 public static class RuntimeProviderSelection
@@ -306,7 +307,8 @@ public sealed record AppSettingsSnapshot(
     string WslcImageMirror = "",
     bool WslcRewriteImageTag = false,
     bool WslcRemoveRewrittenSourceTag = false,
-    string WslcEnvironment = "");
+    string WslcEnvironment = "",
+    bool WslcPrerequisiteInitialized = false);
 
 public sealed record CommandResult(
     int ExitCode,

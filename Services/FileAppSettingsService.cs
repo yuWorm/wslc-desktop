@@ -104,7 +104,8 @@ public sealed class FileAppSettingsService : IAppSettingsService
         string? WslcImageMirror,
         bool WslcRewriteImageTag,
         bool WslcRemoveRewrittenSourceTag,
-        string? WslcEnvironment)
+        string? WslcEnvironment,
+        bool WslcPrerequisiteInitialized)
     {
         public static StoredSettings FromSnapshot(AppSettingsSnapshot snapshot)
         {
@@ -125,7 +126,8 @@ public sealed class FileAppSettingsService : IAppSettingsService
                 snapshot.WslcImageMirror,
                 snapshot.WslcRewriteImageTag,
                 snapshot.WslcRewriteImageTag && snapshot.WslcRemoveRewrittenSourceTag,
-                snapshot.WslcEnvironment);
+                snapshot.WslcEnvironment,
+                snapshot.WslcPrerequisiteInitialized);
         }
 
         public AppSettingsSnapshot ToSnapshot()
@@ -148,7 +150,8 @@ public sealed class FileAppSettingsService : IAppSettingsService
                 NormalizeText(WslcImageMirror).TrimEnd('/'),
                 WslcRewriteImageTag,
                 WslcRewriteImageTag && WslcRemoveRewrittenSourceTag,
-                NormalizeMultiline(WslcEnvironment));
+                NormalizeMultiline(WslcEnvironment),
+                WslcPrerequisiteInitialized);
         }
 
         private static string NormalizeText(string? value)

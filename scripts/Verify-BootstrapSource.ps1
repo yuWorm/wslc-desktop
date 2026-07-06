@@ -25,8 +25,22 @@ function Require-Contains {
     }
 }
 
+function Require-NotContains {
+    param(
+        [string]$Text,
+        [string]$Pattern,
+        [string]$Message
+    )
+
+    if ($Text -match $Pattern) {
+        throw $Message
+    }
+}
+
 $models = Read-ProjectFile "Models\WslcDomainModels.cs"
 $app = Read-ProjectFile "App.xaml.cs"
+$mainWindowCode = Read-ProjectFile "MainWindow.xaml.cs"
+$mainWindowXaml = Read-ProjectFile "MainWindow.xaml"
 $appServices = Read-ProjectFile "Services\AppServices.cs"
 $bootstrap = Read-ProjectFile "Services\EnvironmentBootstrapService.cs"
 $evaluator = Read-ProjectFile "Services\BootstrapPrerequisiteEvaluator.cs"
@@ -42,6 +56,27 @@ $zh = Read-ProjectFile "Strings\zh-CN\Resources.resw"
 $localizer = Read-ProjectFile "Services\AppStringLocalizer.cs"
 $bootstrapVerify = Read-ProjectFile "tools\BootstrapVerify\Program.cs"
 
+$mainWindowConstructor = [regex]::Match(
+    $mainWindowCode,
+    'public\s+MainWindow\(\)[\s\S]*?AppLaunchLogger\.Info\("MainWindow constructor completed\."\);\s*\}').Value
+if ([string]::IsNullOrWhiteSpace($mainWindowConstructor)) {
+    throw "Could not locate the MainWindow constructor for startup gate verification."
+}
+
+$mainWindowLoaded = [regex]::Match(
+    $mainWindowCode,
+    'private\s+(?:async\s+)?void\s+MainWindow_Loaded\([^\)]*\)[\s\S]*?\n    \}').Value
+if ([string]::IsNullOrWhiteSpace($mainWindowLoaded)) {
+    throw "Could not locate MainWindow_Loaded for startup gate verification."
+}
+
+$startupBootstrap = [regex]::Match(
+    $app,
+    'private\s+static\s+async\s+Task\s+RunStartupBootstrapAsync\(\)[\s\S]*?(?=\n    private\s+static\s+async\s+Task<bool>\s+EnsureWslcPrerequisiteAsync)').Value
+if ([string]::IsNullOrWhiteSpace($startupBootstrap)) {
+    throw "Could not locate RunStartupBootstrapAsync for startup gate verification."
+}
+
 foreach ($needle in @("WslcPrerequisiteState", "WslcPrerequisiteStatus", "DockerCliStatus", "DockerStaticRelease", "CliToolInstallResult")) {
     Require-Contains $models ([regex]::Escape($needle)) "Models must expose $needle."
 }
@@ -49,7 +84,20 @@ foreach ($needle in @("WslcPrerequisiteState", "WslcPrerequisiteStatus", "Docker
 foreach ($needle in @("RunStartupBootstrapAsync", "EnsureWslcPrerequisiteAsync", "ShowWslcRequiredDialogAsync", "MaybeShowDockerCliDialogAsync", "StartDaemonOnLaunchAsync", "CopyTextToClipboard")) {
     Require-Contains $app ([regex]::Escape($needle)) "App startup must contain $needle."
 }
-Require-Contains $app 'EnsureWslcPrerequisiteAsync[\s\S]*StartDaemonOnLaunchAsync' "App must gate daemon startup behind the wslc prerequisite check."
+Require-Contains $startupBootstrap 'EnsureWslcPrerequisiteAsync[\s\S]*StartDaemonOnLaunchAsync' "App must gate daemon startup behind the wslc prerequisite check."
+Require-Contains $startupBootstrap 'EnsureWslcPrerequisiteAsync[\s\S]*EnterApplicationShell' "App must only enter the navigable shell after the wslc prerequisite check succeeds."
+Require-NotContains $startupBootstrap 'EnterApplicationShell[\s\S]*EnsureWslcPrerequisiteAsync' "App must not enter the navigable shell before checking the wslc prerequisite."
+foreach ($needle in @("WslcPrerequisiteInitialized", "MarkWslcPrerequisiteInitializedAsync", "CheckWslcWithStartupTimeoutAsync")) {
+    Require-Contains $app ([regex]::Escape($needle)) "App startup must contain first-run prerequisite gate item $needle."
+}
+
+foreach ($needle in @("RuntimePrerequisitesReady", "EnterApplicationShell", "StartShellStatusPollingAsync")) {
+    Require-Contains $mainWindowCode ([regex]::Escape($needle)) "MainWindow must contain the startup gate member $needle."
+}
+Require-NotContains $mainWindowConstructor 'NavFrame\.Navigate' "MainWindow constructor must not navigate before WSLC is verified."
+Require-NotContains $mainWindowLoaded 'RefreshShellStatusAsync' "MainWindow.Loaded must not refresh daemon status before WSLC is verified."
+Require-Contains $mainWindowCode 'if\s*\(!RuntimePrerequisitesReady\)' "Navigation must ignore user selection while startup prerequisites are not ready."
+Require-Contains $mainWindowXaml 'x:Name="NavView"[\s\S]*IsEnabled="False"' "NavigationView must remain disabled until startup prerequisites pass."
 
 foreach ($needle in @("Bootstrap", "CliTools", "EnvironmentBootstrapService", "CliToolInstallationService", "ProcessCommandProbe", "CliToolPathResolver")) {
     Require-Contains $appServices ([regex]::Escape($needle)) "AppServices must wire $needle."
@@ -59,8 +107,11 @@ Require-Contains $appServices "DockerContext" "AppServices must wire the Docker 
 foreach ($needle in @("CheckWslcAsync", "CheckDockerCliAsync", "AddToolBinToProcessPath", "wsl.exe", "wslc.exe", "docker.exe")) {
     Require-Contains $bootstrap ([regex]::Escape($needle)) "Environment bootstrap service must contain $needle."
 }
+foreach ($needle in @("TimeSpan.FromSeconds(5)", "CancelAfter", "OperationCanceledException", "CreateWslcCheckTimedOut")) {
+    Require-Contains $bootstrap ([regex]::Escape($needle)) "WSLC prerequisite probing must enforce timeout item $needle."
+}
 
-foreach ($needle in @("wsl --install", "wsl --update", "WslUpdateRequired", "MissingWsl")) {
+foreach ($needle in @("wsl --install", "wsl --update", "WslUpdateRequired", "MissingWsl", "CheckTimedOut", "CreateWslcCheckTimedOut")) {
     Require-Contains $evaluator ([regex]::Escape($needle)) "WSLC prerequisite evaluator must contain $needle."
 }
 
@@ -104,7 +155,7 @@ foreach ($needle in @("WslcRequiredDialogTitle", "DockerCliOptionalDialogTitle",
     Require-Contains $localizer ([regex]::Escape($needle)) "AppStringLocalizer must contain $needle."
 }
 
-foreach ($needle in @("Missing WSL must recommend wsl --install", "Old WSL must recommend wsl --update", "Docker CLI installer must not copy dockerd.exe", "Compose installer must install Docker CLI plugin")) {
+foreach ($needle in @("Missing WSL must recommend wsl --install", "Old WSL must recommend wsl --update", "Timed-out WSLC checks must be classified", "Default settings must force the first-run WSLC gate", "Settings must persist the successful WSLC initialization marker", "Docker CLI installer must not copy dockerd.exe", "Compose installer must install Docker CLI plugin")) {
     Require-Contains $bootstrapVerify ([regex]::Escape($needle)) "BootstrapVerify must assert $needle."
 }
 

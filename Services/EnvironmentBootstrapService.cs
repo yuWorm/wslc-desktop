@@ -13,6 +13,7 @@ public interface IEnvironmentBootstrapService
 
 public sealed class EnvironmentBootstrapService : IEnvironmentBootstrapService
 {
+    private static readonly TimeSpan WslcCheckTimeout = TimeSpan.FromSeconds(5);
     private readonly ICommandProbe _probe;
     private readonly CliToolPathResolver _paths;
 
@@ -24,12 +25,22 @@ public sealed class EnvironmentBootstrapService : IEnvironmentBootstrapService
 
     public async Task<WslcPrerequisiteStatus> CheckWslcAsync(CancellationToken cancellationToken = default)
     {
-        CommandProbeResult wsl = await _probe.RunAsync("wsl.exe", "--version", cancellationToken);
-        CommandProbeResult wslc = await _probe.RunAsync("wslc.exe", "version", cancellationToken);
-        return BootstrapPrerequisiteEvaluator.EvaluateWslc(
-            wsl.Exists,
-            wslc.Exists && wslc.ExitCode == 0,
-            MergeOutput(wsl));
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(WslcCheckTimeout);
+
+        try
+        {
+            CommandProbeResult wsl = await _probe.RunAsync("wsl.exe", "--version", timeout.Token);
+            CommandProbeResult wslc = await _probe.RunAsync("wslc.exe", "version", timeout.Token);
+            return BootstrapPrerequisiteEvaluator.EvaluateWslc(
+                wsl.Exists,
+                wslc.Exists && wslc.ExitCode == 0,
+                MergeOutput(wsl));
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return BootstrapPrerequisiteEvaluator.CreateWslcCheckTimedOut(WslcCheckTimeout);
+        }
     }
 
     public async Task<DockerCliStatus> CheckDockerCliAsync(CancellationToken cancellationToken = default)

@@ -43,6 +43,16 @@ public static class BootstrapPrerequisiteEvaluator
                 : $"WSL is installed, but wslc.exe is missing. Update WSL to the latest version. {detectedVersion}");
     }
 
+    public static WslcPrerequisiteStatus CreateWslcCheckTimedOut(TimeSpan timeout)
+    {
+        return new WslcPrerequisiteStatus(
+            WslcPrerequisiteState.CheckTimedOut,
+            false,
+            "wsl --version; wslc.exe version",
+            string.Empty,
+            $"WSLC prerequisite check timed out after {timeout.TotalSeconds:0} seconds. Run the command manually to verify that WSL and wslc.exe are responsive.");
+    }
+
     private static string NormalizeVersionOutput(string value)
     {
         return value.Replace("\r\n", "\n", StringComparison.Ordinal)

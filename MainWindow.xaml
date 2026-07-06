@@ -134,6 +134,7 @@
             x:Name="NavView"
             AutomationProperties.AutomationId="NavRoot"
             Grid.Row="1"
+            IsEnabled="False"
             IsBackButtonVisible="Collapsed"
             IsPaneToggleButtonVisible="False"
             SelectionChanged="NavView_SelectionChanged">

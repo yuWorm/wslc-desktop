@@ -39,6 +39,8 @@ public sealed partial class MainWindow : Window
 
     public AsyncRelayCommand ExitApplicationCommand { get; }
 
+    public bool RuntimePrerequisitesReady { get; private set; }
+
     public MainWindow()
     {
         AppLaunchLogger.Info("MainWindow constructor started.");
@@ -75,7 +77,6 @@ public sealed partial class MainWindow : Window
         AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
         CenterWindowOnPrimaryDisplay();
         AppWindow.SetIcon("Assets/AppIcon.ico");
-        NavFrame.Navigate(typeof(ContainersPage));
 
         _statusTimer.Tick += ShellStatusTimer_Tick;
         ShellStatus.PropertyChanged += ShellStatus_PropertyChanged;
@@ -91,11 +92,19 @@ public sealed partial class MainWindow : Window
 
     private void TitleBar_BackRequested(TitleBar sender, object args)
     {
-        NavFrame.GoBack();
+        if (NavFrame.CanGoBack)
+        {
+            NavFrame.GoBack();
+        }
     }
 
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
+        if (!RuntimePrerequisitesReady)
+        {
+            return;
+        }
+
         if (args.IsSettingsSelected)
         {
             NavFrame.Navigate(typeof(SettingsPage));
@@ -125,11 +134,9 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         BringWindowToFront();
-        await RefreshShellStatusAsync();
-        _statusTimer.Start();
     }
 
     private async void ShellStatusTimer_Tick(object? sender, object e)
@@ -139,21 +146,41 @@ public sealed partial class MainWindow : Window
 
     private async void RefreshShellStatus_Click(object sender, RoutedEventArgs e)
     {
+        if (!RuntimePrerequisitesReady)
+        {
+            return;
+        }
+
         await RefreshShellStatusAsync();
     }
 
     private async void StartDaemonFromStatus_Click(object sender, RoutedEventArgs e)
     {
+        if (!RuntimePrerequisitesReady)
+        {
+            return;
+        }
+
         await StartDaemonAsync();
     }
 
     private async void RestartDaemonFromStatus_Click(object sender, RoutedEventArgs e)
     {
+        if (!RuntimePrerequisitesReady)
+        {
+            return;
+        }
+
         await RestartDaemonAsync();
     }
 
     private async void StopDaemonFromStatus_Click(object sender, RoutedEventArgs e)
     {
+        if (!RuntimePrerequisitesReady)
+        {
+            return;
+        }
+
         await StopDaemonAsync();
     }
 
@@ -211,8 +238,42 @@ public sealed partial class MainWindow : Window
         NavigateToSettings();
     }
 
+    public void EnterApplicationShell()
+    {
+        if (RuntimePrerequisitesReady)
+        {
+            return;
+        }
+
+        AppLaunchLogger.Info("Runtime prerequisites are ready; entering application shell.");
+        RuntimePrerequisitesReady = true;
+        NavView.IsEnabled = true;
+        NavView.SelectedItem = NavContainers;
+
+        if (NavFrame.Content?.GetType() != typeof(ContainersPage))
+        {
+            NavFrame.Navigate(typeof(ContainersPage));
+        }
+    }
+
+    public async Task StartShellStatusPollingAsync()
+    {
+        if (!RuntimePrerequisitesReady || _statusTimer.IsEnabled)
+        {
+            return;
+        }
+
+        await RefreshShellStatusAsync();
+        _statusTimer.Start();
+    }
+
     private void NavigateToSettings()
     {
+        if (!RuntimePrerequisitesReady)
+        {
+            return;
+        }
+
         NavView.SelectedItem = NavView.SettingsItem;
         NavFrame.Navigate(typeof(SettingsPage));
     }
@@ -257,6 +318,11 @@ public sealed partial class MainWindow : Window
 
     private async Task RunDaemonActionAsync(Func<CancellationToken, Task> action)
     {
+        if (!RuntimePrerequisitesReady)
+        {
+            return;
+        }
+
         try
         {
             _statusTimer.Stop();

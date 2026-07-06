@@ -98,6 +98,11 @@ public partial class App : Application
             AppLaunchLogger.Info("Startup bootstrap started.");
             AppServices.Bootstrap.AddToolBinToProcessPath();
 
+            AppSettingsSnapshot startupSettings = AppServices.StartupSettings.LoadForStartup();
+            AppLaunchLogger.Info(startupSettings.WslcPrerequisiteInitialized
+                ? "WSLC prerequisite was previously initialized; running silent startup check."
+                : "WSLC prerequisite is not initialized; waiting for first-run check before entering the shell.");
+
             bool wslcReady = await EnsureWslcPrerequisiteAsync(mainWindow);
             if (!wslcReady)
             {
@@ -105,8 +110,11 @@ public partial class App : Application
                 return;
             }
 
+            await MarkWslcPrerequisiteInitializedAsync();
+            mainWindow.EnterApplicationShell();
             await MaybeShowDockerCliDialogAsync(mainWindow);
             await StartDaemonOnLaunchAsync();
+            await mainWindow.StartShellStatusPollingAsync();
             AppLaunchLogger.Info("Startup bootstrap completed.");
         }
         catch (Exception ex)
@@ -123,7 +131,7 @@ public partial class App : Application
     {
         while (true)
         {
-            WslcPrerequisiteStatus status = await AppServices.Bootstrap.CheckWslcAsync();
+            WslcPrerequisiteStatus status = await CheckWslcWithStartupTimeoutAsync();
             if (status.IsReady)
             {
                 return true;
@@ -143,6 +151,30 @@ public partial class App : Application
 
             Application.Current.Exit();
             return false;
+        }
+    }
+
+    private static Task<WslcPrerequisiteStatus> CheckWslcWithStartupTimeoutAsync()
+    {
+        return AppServices.Bootstrap.CheckWslcAsync();
+    }
+
+    private static async Task MarkWslcPrerequisiteInitializedAsync()
+    {
+        try
+        {
+            AppSettingsSnapshot settings = AppServices.StartupSettings.LoadForStartup();
+            if (settings.WslcPrerequisiteInitialized)
+            {
+                return;
+            }
+
+            await AppServices.StartupSettings.SaveAsync(settings with { WslcPrerequisiteInitialized = true });
+            AppLaunchLogger.Info("WSLC prerequisite initialization marker saved.");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            AppLaunchLogger.Error("Failed to save WSLC prerequisite initialization marker.", ex);
         }
     }
 

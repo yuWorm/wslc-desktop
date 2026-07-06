@@ -25,6 +25,14 @@ var readyWslc = BootstrapPrerequisiteEvaluator.EvaluateWslc(
 Expect(readyWslc.IsReady, "wslc presence must unblock startup.");
 Expect(readyWslc.State == WslcPrerequisiteState.Ready, "wslc presence must be ready.");
 
+var timedOutWslc = BootstrapPrerequisiteEvaluator.CreateWslcCheckTimedOut(TimeSpan.FromSeconds(5));
+Expect(timedOutWslc.State == WslcPrerequisiteState.CheckTimedOut, "Timed-out WSLC checks must be classified.");
+Expect(!timedOutWslc.IsReady, "Timed-out WSLC checks must block startup.");
+Expect(timedOutWslc.Message.Contains("timed out", StringComparison.OrdinalIgnoreCase), "Timed-out WSLC checks must explain the timeout.");
+
+AppSettingsSnapshot defaultSettings = FileAppSettingsService.CreateDefault();
+Expect(!defaultSettings.WslcPrerequisiteInitialized, "Default settings must force the first-run WSLC gate.");
+
 var latestDocker = DockerStaticReleaseIndex.FindLatestDockerZip("""
     <a href="docker-29.5.3.zip">docker-29.5.3.zip</a>
     <a href="docker-29.6.1.zip">docker-29.6.1.zip</a>
@@ -72,6 +80,11 @@ try
     Expect(combinedPath == @"C:\Tools;C:\Existing", "PATH editor must not duplicate existing path segments.");
     string appendedPath = PathEnvironmentEditor.AddPathSegment(@"C:\Existing", @"C:\Tools");
     Expect(appendedPath == @"C:\Existing;C:\Tools", "PATH editor must append missing path segments.");
+
+    var settingsService = new FileAppSettingsService(Path.Combine(root, "Settings"));
+    await settingsService.SaveAsync(defaultSettings with { WslcPrerequisiteInitialized = true });
+    AppSettingsSnapshot initializedSettings = await settingsService.LoadAsync();
+    Expect(initializedSettings.WslcPrerequisiteInitialized, "Settings must persist the successful WSLC initialization marker.");
 
     var contextProbe = new RecordingCommandProbe([
         new CommandProbeResult(true, 1, string.Empty, "context not found", "docker.exe"),
