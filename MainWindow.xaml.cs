@@ -37,6 +37,7 @@ public sealed partial class MainWindow : Window
 
     public MainWindow()
     {
+        AppLaunchLogger.Info("MainWindow constructor started.");
         ShowMainWindowCommand = new AsyncRelayCommand(() =>
         {
             ShowMainWindow();
@@ -53,7 +54,17 @@ public sealed partial class MainWindow : Window
         StopDaemonCommand = new AsyncRelayCommand(StopDaemonAsync, () => ShellStatus.CanStopDaemon);
         ExitApplicationCommand = new AsyncRelayCommand(ExitApplicationAsync);
 
-        InitializeComponent();
+        try
+        {
+            AppLaunchLogger.Info("MainWindow InitializeComponent started.");
+            InitializeComponent();
+            AppLaunchLogger.Info("MainWindow InitializeComponent completed.");
+        }
+        catch (Exception ex)
+        {
+            AppLaunchLogger.Error("MainWindow InitializeComponent failed.", ex);
+            throw;
+        }
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
@@ -65,6 +76,7 @@ public sealed partial class MainWindow : Window
         ShellStatus.PropertyChanged += ShellStatus_PropertyChanged;
         AppTitleBar.Loaded += MainWindow_Loaded;
         Closed += MainWindow_Closed;
+        AppLaunchLogger.Info("MainWindow constructor completed.");
     }
 
     private void TitleBar_PaneToggleRequested(TitleBar sender, object args)

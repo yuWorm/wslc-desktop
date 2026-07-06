@@ -12,6 +12,14 @@ $HostRid = "win-" + [System.Runtime.InteropServices.RuntimeInformation]::Process
 $ReleaseRid = if ($Platform.Equals("ARM64", [System.StringComparison]::OrdinalIgnoreCase)) { "win-arm64" } elseif ($Platform.Equals("x86", [System.StringComparison]::OrdinalIgnoreCase)) { "win-x86" } else { "win-x64" }
 $ReleaseLayout = Join-Path $Root "bin\$Platform\Release\net10.0-windows10.0.26100.0\$ReleaseRid"
 $ReleaseDaemon = Join-Path $ReleaseLayout "wslcd\wslcd-desktop.exe"
+$RootBuildProperties = @(
+    "-p:Platform=$Platform",
+    "-p:RuntimeIdentifier=$ReleaseRid",
+    "-p:PublishReadyToRun=false",
+    "-p:EnableDevelopmentCodeSigning=false",
+    "-p:WindowsPackageType=None",
+    "-p:WindowsAppSDKSelfContained=true",
+    "-p:EnableMsixTooling=false")
 
 function Invoke-Step {
     param(
@@ -68,13 +76,9 @@ function Invoke-ProcessStep {
     }
 }
 
-Invoke-ProcessStep "dotnet restore root project" "" "dotnet" @(
+Invoke-ProcessStep "dotnet restore root project" "" "dotnet" (@(
     "restore",
-    "wslc-desktop.csproj",
-    "-p:Platform=$Platform",
-    "-p:RuntimeIdentifier=$ReleaseRid",
-    "-p:PublishReadyToRun=false",
-    "-p:EnableDevelopmentCodeSigning=false")
+    "wslc-desktop.csproj") + $RootBuildProperties)
 
 Invoke-ProcessStep "dotnet restore wslcd host RID" "" "dotnet" @(
     "restore",
@@ -104,14 +108,10 @@ foreach ($toolProject in @(
         "-p:RuntimeIdentifier=any")
 }
 
-Invoke-ProcessStep "dotnet build --no-restore" "" "dotnet" @(
+Invoke-ProcessStep "dotnet build --no-restore" "" "dotnet" (@(
     "build",
     "wslc-desktop.csproj",
-    "--no-restore",
-    "-p:Platform=$Platform",
-    "-p:RuntimeIdentifier=$ReleaseRid",
-    "-p:PublishReadyToRun=false",
-    "-p:EnableDevelopmentCodeSigning=false")
+    "--no-restore") + $RootBuildProperties)
 
 Invoke-ProcessStep "Phase 18 source verifier" "PHASE18_SOURCE_OK" "powershell" @(
     "-ExecutionPolicy",
@@ -143,20 +143,28 @@ Invoke-ProcessStep "ComposePlanVerify" "PHASE7_COMPOSE_PLAN_OK" "dotnet" @("run"
 
 Invoke-ProcessStep "HardeningVerify" "PHASE8_HARDENING_OK" "dotnet" @("run", "--project", "tools\HardeningVerify\HardeningVerify.csproj", "--no-restore") -AllowFailure:$AllowKnownLocalBlockers
 
-Invoke-ProcessStep "Release build" "" "dotnet" @(
+Invoke-ProcessStep "Release build" "" "dotnet" (@(
     "build",
     "wslc-desktop.csproj",
     "-c",
     "Release",
-    "--no-restore",
-    "-p:Platform=$Platform",
-    "-p:RuntimeIdentifier=$ReleaseRid",
-    "-p:PublishReadyToRun=false",
-    "-p:EnableDevelopmentCodeSigning=false")
+    "--no-restore") + $RootBuildProperties)
 
 Invoke-Step "Release layout daemon exists" {
     if (-not (Test-Path $ReleaseDaemon)) {
         throw "Release layout daemon was not found at $ReleaseDaemon."
+    }
+}
+
+Invoke-Step "Release layout is self-contained unpackaged" {
+    foreach ($required in @(
+        (Join-Path $ReleaseLayout "wslc-desktop.exe"),
+        (Join-Path $ReleaseLayout "Microsoft.WindowsAppRuntime.dll"),
+        (Join-Path $ReleaseLayout "Microsoft.UI.Xaml.dll"),
+        (Join-Path $ReleaseLayout "Assets\AppIcon.ico"))) {
+        if (-not (Test-Path $required)) {
+            throw "Release layout is missing required unpackaged runtime file: $required"
+        }
     }
 }
 

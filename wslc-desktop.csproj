@@ -12,7 +12,11 @@
     <UseWinUI>true</UseWinUI>
     <WinUISDKReferences>false</WinUISDKReferences>
     <WindowsSdkPackageVersion>10.0.26100.80</WindowsSdkPackageVersion>
-    <EnableMsixTooling>true</EnableMsixTooling>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+    <WindowsPackageType Condition="'$(WindowsPackageType)' == '' and '$(Configuration)' == 'Release'">None</WindowsPackageType>
+    <WindowsAppSDKSelfContained Condition="'$(WindowsAppSDKSelfContained)' == '' and '$(Configuration)' == 'Release'">true</WindowsAppSDKSelfContained>
+    <EnableMsixTooling Condition="'$(EnableMsixTooling)' == '' and '$(Configuration)' == 'Release'">false</EnableMsixTooling>
+    <EnableMsixTooling Condition="'$(EnableMsixTooling)' == ''">true</EnableMsixTooling>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -20,8 +24,21 @@
   <ItemGroup>
     <Compile Remove="tools\**\*.cs" />
     <Compile Remove="src\**\*.cs" />
+    <Compile Remove="sources\**\*.cs" />
     <None Remove="tools\**\*" />
     <None Remove="src\**\*" />
+    <None Remove="sources\**\*" />
+    <None Remove="artifacts\**\*" />
+    <None Remove="docs.bak\**\*" />
+    <None Remove=".agents\**\*" />
+    <None Remove=".codex\**\*" />
+    <Content Remove="tools\**\*" />
+    <Content Remove="src\**\*" />
+    <Content Remove="sources\**\*" />
+    <Content Remove="artifacts\**\*" />
+    <Content Remove="docs.bak\**\*" />
+    <Content Remove=".agents\**\*" />
+    <Content Remove=".codex\**\*" />
   </ItemGroup>
 
   <ItemGroup>

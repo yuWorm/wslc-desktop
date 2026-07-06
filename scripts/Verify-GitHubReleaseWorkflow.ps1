@@ -3,6 +3,9 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $workflowPath = Join-Path $root ".github\workflows\release.yml"
 $gitignorePath = Join-Path $root ".gitignore"
+$projectPath = Join-Path $root "wslc-desktop.csproj"
+$appPath = Join-Path $root "App.xaml.cs"
+$launchLoggerPath = Join-Path $root "Services\AppLaunchLogger.cs"
 $fullReleasePath = Join-Path $root "scripts\Verify-FullRelease.ps1"
 $artifactScriptPath = Join-Path $root "scripts\Build-ReleaseArtifacts.ps1"
 $installerScriptPath = Join-Path $root "installer\wslc-desktop.iss"
@@ -40,11 +43,14 @@ if (-not (Test-Path $workflowPath)) {
 
 $workflow = Get-Content -Raw $workflowPath
 $gitignore = Get-Content -Raw $gitignorePath
+$project = Get-Content -Raw $projectPath
+$app = Get-Content -Raw $appPath
+$launchLogger = Get-Content -Raw $launchLoggerPath
 $fullRelease = Get-Content -Raw $fullReleasePath
 $artifactScript = Get-Content -Raw $artifactScriptPath
 $installerScript = Get-Content -Raw $installerScriptPath
 
-foreach ($path in @($artifactScriptPath, $installerScriptPath, $releaseNotesPath, $dockerMatrixPath, $runtimeMatrixPath)) {
+foreach ($path in @($projectPath, $appPath, $launchLoggerPath, $artifactScriptPath, $installerScriptPath, $releaseNotesPath, $dockerMatrixPath, $runtimeMatrixPath)) {
     if (-not (Test-Path $path)) {
         throw "Missing release documentation required by release automation: $path"
     }
@@ -82,9 +88,15 @@ Assert-NotContains $workflow '\.msix' "Release workflow must not publish MSIX ar
 Assert-Contains $artifactScript 'Get-FileHash' "Release artifact script must generate checksums."
 Assert-Contains $artifactScript 'Compress-Archive' "Release artifact script must create portable.zip."
 Assert-Contains $artifactScript 'ISCC\.exe' "Release artifact script must create Setup.exe through Inno Setup."
+Assert-Contains $artifactScript 'Microsoft\.WindowsAppRuntime\.dll' "Release artifact script must require a self-contained Windows App SDK layout."
+Assert-Contains $artifactScript 'excludedRootItems' "Release artifact script must exclude repository-only directories from installers."
+Assert-Contains $artifactScript '"sources"' "Release artifact script must exclude reference source snapshots from installers."
+Assert-Contains $artifactScript '"artifacts"' "Release artifact script must exclude nested build artifacts from installers."
 Assert-Contains $installerScript 'AppName=\{#AppName\}' "Inno Setup script must define the WSLC Desktop app identity."
 Assert-Contains $installerScript 'Source: "\{#SourceDir\}\\\*"' "Inno Setup script must package the prepared release layout."
 Assert-Contains $installerScript 'DefaultDirName=\{localappdata\}\\Programs\\WSLC Desktop' "Inno Setup script must install per-user without elevation."
+Assert-Contains $installerScript 'UninstallDisplayIcon=\{app\}\\Assets\\AppIcon\.ico' "Inno Setup script must use the app icon for Add/Remove Programs."
+Assert-Contains $installerScript 'IconFilename: "\{app\}\\Assets\\AppIcon\.ico"' "Inno Setup shortcuts must use the app icon."
 Assert-Contains $workflow 'actions/upload-artifact@v4' "Release workflow must upload per-platform artifacts."
 Assert-Contains $workflow 'actions/download-artifact@v4' "Release workflow must collect matrix artifacts before release."
 Assert-Contains $workflow 'softprops/action-gh-release@v2' "Release workflow must publish artifacts to GitHub Releases."
@@ -94,7 +106,20 @@ Assert-Contains $workflow 'docs/RELEASE_NOTES\.md' "Release workflow must use re
 Assert-Contains $fullRelease 'EnableDevelopmentCodeSigning=false' "Full release verifier must disable Debug loose-layout development signing in CI."
 Assert-Contains $fullRelease 'RuntimeIdentifier=\$ReleaseRid' "Full release verifier must build the selected release RID."
 Assert-Contains $fullRelease 'PublishReadyToRun=false' "Full release verifier must avoid ReadyToRun restore mismatches on GitHub-hosted runners."
+Assert-Contains $fullRelease 'WindowsPackageType=None' "Full release verifier must build an unpackaged Release layout for Setup.exe and portable.zip."
+Assert-Contains $fullRelease 'WindowsAppSDKSelfContained=true' "Full release verifier must build a self-contained Windows App SDK layout."
+Assert-Contains $fullRelease 'Microsoft\.WindowsAppRuntime\.dll' "Full release verifier must assert the self-contained Windows App SDK runtime is present."
 Assert-Contains $fullRelease 'Invoke-ProcessStep "dotnet build --no-restore"' "Full release verifier must check native dotnet build exit codes."
 Assert-Contains $fullRelease 'Invoke-ProcessStep "Release build"' "Full release verifier must check native Release build exit codes."
+
+Assert-Contains $project 'ApplicationIcon' "Project must embed the app icon for unpackaged installers."
+Assert-Contains $project 'WindowsPackageType' "Project must declare the Release app model."
+Assert-Contains $project 'WindowsAppSDKSelfContained' "Project must declare the Release Windows App SDK deployment mode."
+Assert-Contains $project 'EnableMsixTooling' "Project must keep MSIX tooling conditional by build configuration."
+Assert-Contains $project 'sources\\\*\*\\\*' "Project must exclude reference source snapshots from build outputs."
+Assert-Contains $project 'artifacts\\\*\*\\\*' "Project must exclude nested build artifacts from build outputs."
+Assert-Contains $app 'TrySetPrimaryLanguageOverride' "App startup must not crash when Windows language override is unavailable in unpackaged mode."
+Assert-Contains $launchLogger 'wslc-desktop-launch' "App must write launch diagnostics for silent startup failures."
+Assert-Contains $launchLogger 'last-crash\.log' "App must write a last-crash diagnostic file."
 
 Write-Host "GITHUB_RELEASE_WORKFLOW_OK"

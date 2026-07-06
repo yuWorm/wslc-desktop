@@ -5,7 +5,11 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 
 $ProjectPath = Join-Path $Root "wslc-desktop.csproj"
+$AppPath = Join-Path $Root "App.xaml.cs"
 $ManifestPath = Join-Path $Root "Package.appxmanifest"
+$LaunchLoggerPath = Join-Path $Root "Services\AppLaunchLogger.cs"
+$ArtifactScriptPath = Join-Path $Root "scripts\Build-ReleaseArtifacts.ps1"
+$InstallerPath = Join-Path $Root "installer\wslc-desktop.iss"
 $DaemonPath = Join-Path $Root "src\wslcd\Program.cs"
 $SettingsVmPath = Join-Path $Root "ViewModels\SettingsViewModel.cs"
 $SettingsXamlPath = Join-Path $Root "Pages\SettingsPage.xaml"
@@ -39,11 +43,16 @@ function Assert-Contains {
 
 Assert-Path $StartupTaskPath "Phase 20 must add a StartupTaskService for launch-at-login controls."
 Assert-Path $DaemonDiagnosticsPath "Phase 20 must add daemon diagnostics capture."
+Assert-Path $LaunchLoggerPath "Phase 20 must keep app launch diagnostics for installer troubleshooting."
 Assert-Path $FullVerifyPath "Phase 20 must add a full release verification script."
 Assert-Path $ReleaseNotesPath "Phase 20 must add release notes."
 
 $project = Get-Content -Raw $ProjectPath
+$app = Get-Content -Raw $AppPath
 $manifest = Get-Content -Raw $ManifestPath
+$launchLogger = Get-Content -Raw $LaunchLoggerPath
+$artifactScript = Get-Content -Raw $ArtifactScriptPath
+$installer = Get-Content -Raw $InstallerPath
 $daemon = Get-Content -Raw $DaemonPath
 $settingsVm = Get-Content -Raw $SettingsVmPath
 $settingsXaml = Get-Content -Raw $SettingsXamlPath
@@ -68,6 +77,19 @@ Assert-Contains $project "wslcd-desktop\.exe" "Project must package the renamed 
 Assert-Contains $project "wslcd-desktop\.dll" "Project must package the renamed wslcd-desktop assembly."
 Assert-Contains $project "\$\(OutDir\)wslcd\\" "Project must isolate packaged wslcd output under a daemon subdirectory."
 Assert-Contains $project "\$\(OutDir\)AppX\\wslcd\\" "Project must copy packaged wslcd into the WinApp AppX run layout."
+Assert-Contains $project "ApplicationIcon" "Project must embed the app icon for Setup.exe shortcuts and portable builds."
+Assert-Contains $project "WindowsPackageType" "Project must declare the Release app model for Setup.exe and portable builds."
+Assert-Contains $project "WindowsAppSDKSelfContained" "Project must build Release artifacts with self-contained Windows App SDK runtime files."
+Assert-Contains $project "sources\\\*\*\\\*" "Project must exclude reference source snapshots from build outputs."
+Assert-Contains $project "artifacts\\\*\*\\\*" "Project must exclude nested build artifacts from build outputs."
+Assert-Contains $app "TrySetPrimaryLanguageOverride" "App startup must tolerate missing package identity for language overrides."
+Assert-Contains $launchLogger "wslc-desktop-launch" "App must write launch diagnostics for silent startup failures."
+Assert-Contains $launchLogger "last-crash\.log" "App must write last-crash diagnostics."
+Assert-Contains $artifactScript "Microsoft\.WindowsAppRuntime\.dll" "Release artifact script must reject non-self-contained Windows App SDK layouts."
+Assert-Contains $artifactScript "excludedRootItems" "Release artifact script must exclude repository-only directories."
+Assert-Contains $artifactScript '"sources"' "Release artifact script must exclude reference source snapshots from installers."
+Assert-Contains $installer "IconFilename" "Installer shortcuts must explicitly use the app icon."
+Assert-Contains $installer "UninstallDisplayIcon=\{app\}\\Assets\\AppIcon\.ico" "Installer must show the app icon in Add/Remove Programs."
 Assert-Contains $daemonProcess "Path\.Combine\(appDirectory,\s*""wslcd""\)" "DaemonProcessManager must prefer the packaged daemon subdirectory."
 Assert-Contains $daemonProcess "wslcd-desktop\.exe" "DaemonProcessManager must prefer the renamed daemon executable."
 Assert-Contains $daemonProcess "wslcd-desktop\.dll" "DaemonProcessManager must prefer the renamed daemon DLL."

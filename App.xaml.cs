@@ -29,12 +29,38 @@ public partial class App : Application
     /// </summary>
     public App()
     {
-        UnhandledException += App_UnhandledException;
-        var settings = AppServices.StartupSettings.LoadForStartup();
-        string language = AppLanguage.GetEffectiveLanguage(settings.Language, ApplicationLanguages.Languages);
-        ApplicationLanguages.PrimaryLanguageOverride = language;
-        AppServices.InitializeLocalization(language);
-        InitializeComponent();
+        AppLaunchLogger.InstallGlobalHandlers();
+        AppLaunchLogger.Info($"App constructor started. BaseDirectory={AppContext.BaseDirectory}; ProcessPath={Environment.ProcessPath}");
+
+        try
+        {
+            UnhandledException += App_UnhandledException;
+            AppLaunchLogger.Info("Loading startup settings.");
+            var settings = AppServices.StartupSettings.LoadForStartup();
+            string language = AppLanguage.GetEffectiveLanguage(settings.Language, ApplicationLanguages.Languages);
+            TrySetPrimaryLanguageOverride(language);
+            AppServices.InitializeLocalization(language);
+            AppLaunchLogger.Info($"Initializing XAML. Language={language}");
+            InitializeComponent();
+            AppLaunchLogger.Info("App constructor completed.");
+        }
+        catch (Exception ex)
+        {
+            AppLaunchLogger.Error("App constructor failed.", ex);
+            throw;
+        }
+    }
+
+    private static void TrySetPrimaryLanguageOverride(string language)
+    {
+        try
+        {
+            ApplicationLanguages.PrimaryLanguageOverride = language;
+        }
+        catch (InvalidOperationException ex)
+        {
+            AppLaunchLogger.Info($"Skipping Windows language override in the current app model: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -45,9 +71,12 @@ public partial class App : Application
     {
         try
         {
+            AppLaunchLogger.Info("OnLaunched started.");
             _window = new MainWindow();
             MainWindow = _window;
+            AppLaunchLogger.Info("Activating main window.");
             _window.Activate();
+            AppLaunchLogger.Info("Main window activated.");
             _ = RunStartupBootstrapAsync();
         }
         catch (Exception ex)
@@ -64,16 +93,30 @@ public partial class App : Application
             return;
         }
 
-        AppServices.Bootstrap.AddToolBinToProcessPath();
-
-        bool wslcReady = await EnsureWslcPrerequisiteAsync(mainWindow);
-        if (!wslcReady)
+        try
         {
-            return;
-        }
+            AppLaunchLogger.Info("Startup bootstrap started.");
+            AppServices.Bootstrap.AddToolBinToProcessPath();
 
-        await MaybeShowDockerCliDialogAsync(mainWindow);
-        await StartDaemonOnLaunchAsync();
+            bool wslcReady = await EnsureWslcPrerequisiteAsync(mainWindow);
+            if (!wslcReady)
+            {
+                AppLaunchLogger.Info("Startup bootstrap stopped because WSLC is not ready.");
+                return;
+            }
+
+            await MaybeShowDockerCliDialogAsync(mainWindow);
+            await StartDaemonOnLaunchAsync();
+            AppLaunchLogger.Info("Startup bootstrap completed.");
+        }
+        catch (Exception ex)
+        {
+            AppLaunchLogger.Error("Startup bootstrap failed.", ex);
+            if (MainWindow is wslc_desktop.MainWindow failedWindow)
+            {
+                failedWindow.ShellStatus.ShowOfflineError(ex.Message);
+            }
+        }
     }
 
     private static async Task<bool> EnsureWslcPrerequisiteAsync(wslc_desktop.MainWindow mainWindow)
@@ -211,18 +254,6 @@ public partial class App : Application
 
     private static void WriteCrashLog(Exception ex)
     {
-        try
-        {
-            string root = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "WSLC Desktop",
-                "Diagnostics");
-            Directory.CreateDirectory(root);
-            string path = Path.Combine(root, "last-crash.log");
-            File.WriteAllText(path, $"{DateTimeOffset.Now:O}{Environment.NewLine}{ex}");
-        }
-        catch
-        {
-        }
+        AppLaunchLogger.Error("WinUI unhandled exception.", ex);
     }
 }

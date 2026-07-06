@@ -7,7 +7,12 @@ Release assets are published as:
 - `Setup.exe`: a per-user installer built with Inno Setup. It does not require MSIX certificate trust.
 - `portable.zip`: the same release layout packaged for manual extraction.
 
-MSIX packages are not published for this release line. Unsigned Setup.exe builds can still trigger Windows SmartScreen until a trusted code-signing certificate is added.
+MSIX packages are not published for this release line. Setup.exe and portable builds use an unpackaged, self-contained Windows App SDK layout so the app can start without a separately installed Windows App Runtime. Unsigned Setup.exe builds can still trigger Windows SmartScreen until a trusted code-signing certificate is added.
+
+App startup diagnostics are written under `%LOCALAPPDATA%\WSLC Desktop\Diagnostics`:
+
+- `wslc-desktop-launch-YYYYMMDD.log`: launch progress and startup checkpoints.
+- `last-crash.log`: the latest managed startup or WinUI exception captured by the app.
 
 ## Docker API coverage
 
@@ -52,3 +57,4 @@ The endpoint-by-endpoint source of truth is `docs/DOCKER_API_COMPATIBILITY_MATRI
 - `Microsoft.WSL.Containers` SDK sessions are not the default provider because current observed SDK session resources do not match the user-visible `wslc.exe` resource set.
 - Release artifact verification requires the layout to include `wslcd\wslcd-desktop.exe`, `wslcd-desktop.dll`, and daemon dependency DLLs beside the WinUI executable.
 - Compatibility matrix metadata is embedded in diagnostics when the repository docs are available; installed or portable layouts may report the matrix file as unavailable.
+- If Setup.exe or portable builds do not show a window, check `%LOCALAPPDATA%\WSLC Desktop\Diagnostics\wslc-desktop-launch-YYYYMMDD.log` and `last-crash.log` first.

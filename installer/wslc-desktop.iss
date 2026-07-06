@@ -30,7 +30,7 @@ DisableProgramGroupPage=yes
 OutputDir={#OutputDir}
 OutputBaseFilename={#OutputBaseFilename}
 SetupIconFile=..\Assets\AppIcon.ico
-UninstallDisplayIcon={app}\wslc-desktop.exe
+UninstallDisplayIcon={app}\Assets\AppIcon.ico
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -50,8 +50,8 @@ Name: "{app}\bin"
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\WSLC Desktop"; Filename: "{app}\wslc-desktop.exe"; WorkingDir: "{app}"
-Name: "{autodesktop}\WSLC Desktop"; Filename: "{app}\wslc-desktop.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\WSLC Desktop"; Filename: "{app}\wslc-desktop.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Assets\AppIcon.ico"
+Name: "{autodesktop}\WSLC Desktop"; Filename: "{app}\wslc-desktop.exe"; WorkingDir: "{app}"; IconFilename: "{app}\Assets\AppIcon.ico"; Tasks: desktopicon
 
 [Registry]
 Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\bin"; Check: NeedsAddPath(ExpandConstant('{app}\bin')); Tasks: addtopath

@@ -82,6 +82,9 @@ if (-not (Test-Path -LiteralPath $ReleaseLayout)) {
 
 foreach ($required in @(
     (Join-Path $ReleaseLayout "wslc-desktop.exe"),
+    (Join-Path $ReleaseLayout "Microsoft.WindowsAppRuntime.dll"),
+    (Join-Path $ReleaseLayout "Microsoft.UI.Xaml.dll"),
+    (Join-Path $ReleaseLayout "Assets\AppIcon.ico"),
     (Join-Path $ReleaseLayout "wslcd\wslcd-desktop.exe"))) {
     if (-not (Test-Path -LiteralPath $required)) {
         throw "Release layout is missing required file: $required"
@@ -92,8 +95,18 @@ New-Item -ItemType Directory -Force -Path $DistRoot, $ReleaseRoot | Out-Null
 Remove-DirectoryIfExists $DistDir
 New-Item -ItemType Directory -Force -Path $DistDir | Out-Null
 
+$excludedRootItems = @(
+    "AppX",
+    "artifacts",
+    "docs.bak",
+    "sources",
+    ".agents",
+    ".codex",
+    ".git",
+    ".github")
+
 Get-ChildItem -LiteralPath $ReleaseLayout -Force |
-    Where-Object { $_.Name -ne "AppX" } |
+    Where-Object { $excludedRootItems -notcontains $_.Name } |
     ForEach-Object {
         Copy-Item -LiteralPath $_.FullName -Destination $DistDir -Recurse -Force
     }
