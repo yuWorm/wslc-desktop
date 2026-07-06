@@ -2,6 +2,8 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
+using Windows.Graphics;
 using wslc_desktop.Pages;
 using wslc_desktop.Services;
 using wslc_desktop.ViewModels;
@@ -13,6 +15,8 @@ namespace wslc_desktop;
 
 public sealed partial class MainWindow : Window
 {
+    private const int ShowWindowNormal = 1;
+
     private bool _allowClose;
     private readonly DispatcherTimer _statusTimer = new()
     {
@@ -69,6 +73,7 @@ public sealed partial class MainWindow : Window
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
         AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
+        CenterWindowOnPrimaryDisplay();
         AppWindow.SetIcon("Assets/AppIcon.ico");
         NavFrame.Navigate(typeof(ContainersPage));
 
@@ -122,6 +127,7 @@ public sealed partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        BringWindowToFront();
         await RefreshShellStatusAsync();
         _statusTimer.Start();
     }
@@ -196,6 +202,7 @@ public sealed partial class MainWindow : Window
     {
         AppWindow.Show();
         Activate();
+        BringWindowToFront();
     }
 
     public void ShowSettingsPage()
@@ -299,4 +306,29 @@ public sealed partial class MainWindow : Window
             AppServices.Strings.Get("ShellStatusRuntimeIssue"),
             AppServices.Strings.Get("ShellStatusBackendUnknown"));
     }
+
+    private void CenterWindowOnPrimaryDisplay()
+    {
+        DisplayArea displayArea = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary);
+        RectInt32 workArea = displayArea.WorkArea;
+        int width = Math.Min(Math.Max(760, workArea.Width - 160), workArea.Width);
+        int height = Math.Min(Math.Max(560, workArea.Height - 120), workArea.Height);
+        int x = workArea.X + Math.Max(0, (workArea.Width - width) / 2);
+        int y = workArea.Y + Math.Max(0, (workArea.Height - height) / 2);
+        AppWindow.MoveAndResize(new RectInt32(x, y, width, height));
+    }
+
+    private void BringWindowToFront()
+    {
+        nint hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        ShowWindow(hwnd, ShowWindowNormal);
+        _ = SetForegroundWindow(hwnd);
+        AppLaunchLogger.Info("MainWindow foreground requested.");
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(nint hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(nint hWnd);
 }

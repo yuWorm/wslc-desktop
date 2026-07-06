@@ -13,6 +13,7 @@
     <WinUISDKReferences>false</WinUISDKReferences>
     <WindowsSdkPackageVersion>10.0.26100.80</WindowsSdkPackageVersion>
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <WindowsPackageType Condition="'$(WindowsPackageType)' == '' and '$(Configuration)' == 'Release'">None</WindowsPackageType>
     <WindowsAppSDKSelfContained Condition="'$(WindowsAppSDKSelfContained)' == '' and '$(Configuration)' == 'Release'">true</WindowsAppSDKSelfContained>
     <EnableMsixTooling Condition="'$(EnableMsixTooling)' == '' and '$(Configuration)' == 'Release'">false</EnableMsixTooling>

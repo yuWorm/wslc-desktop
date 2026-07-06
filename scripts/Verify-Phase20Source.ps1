@@ -6,6 +6,8 @@ $Root = Split-Path -Parent $PSScriptRoot
 
 $ProjectPath = Join-Path $Root "wslc-desktop.csproj"
 $AppPath = Join-Path $Root "App.xaml.cs"
+$ProgramPath = Join-Path $Root "Program.cs"
+$MainWindowPath = Join-Path $Root "MainWindow.xaml.cs"
 $ManifestPath = Join-Path $Root "Package.appxmanifest"
 $LaunchLoggerPath = Join-Path $Root "Services\AppLaunchLogger.cs"
 $ArtifactScriptPath = Join-Path $Root "scripts\Build-ReleaseArtifacts.ps1"
@@ -44,11 +46,14 @@ function Assert-Contains {
 Assert-Path $StartupTaskPath "Phase 20 must add a StartupTaskService for launch-at-login controls."
 Assert-Path $DaemonDiagnosticsPath "Phase 20 must add daemon diagnostics capture."
 Assert-Path $LaunchLoggerPath "Phase 20 must keep app launch diagnostics for installer troubleshooting."
+Assert-Path $ProgramPath "Phase 20 must keep app-owned Program.Main for early startup diagnostics."
 Assert-Path $FullVerifyPath "Phase 20 must add a full release verification script."
 Assert-Path $ReleaseNotesPath "Phase 20 must add release notes."
 
 $project = Get-Content -Raw $ProjectPath
 $app = Get-Content -Raw $AppPath
+$program = Get-Content -Raw $ProgramPath
+$mainWindow = Get-Content -Raw $MainWindowPath
 $manifest = Get-Content -Raw $ManifestPath
 $launchLogger = Get-Content -Raw $LaunchLoggerPath
 $artifactScript = Get-Content -Raw $ArtifactScriptPath
@@ -80,9 +85,15 @@ Assert-Contains $project "\$\(OutDir\)AppX\\wslcd\\" "Project must copy packaged
 Assert-Contains $project "ApplicationIcon" "Project must embed the app icon for Setup.exe shortcuts and portable builds."
 Assert-Contains $project "WindowsPackageType" "Project must declare the Release app model for Setup.exe and portable builds."
 Assert-Contains $project "WindowsAppSDKSelfContained" "Project must build Release artifacts with self-contained Windows App SDK runtime files."
+Assert-Contains $project "DISABLE_XAML_GENERATED_MAIN" "Project must use app-owned Program.Main for early startup diagnostics."
 Assert-Contains $project "sources\\\*\*\\\*" "Project must exclude reference source snapshots from build outputs."
 Assert-Contains $project "artifacts\\\*\*\\\*" "Project must exclude nested build artifacts from build outputs."
 Assert-Contains $app "TrySetPrimaryLanguageOverride" "App startup must tolerate missing package identity for language overrides."
+Assert-Contains $program "Program\.Main started" "Program.Main must log before WinUI Application.Start."
+Assert-Contains $program "WinRT\.ComWrappersSupport\.InitializeComWrappers" "Program.Main must preserve generated WinUI COM wrapper initialization."
+Assert-Contains $program "Application\.Start" "Program.Main must preserve WinUI Application.Start."
+Assert-Contains $mainWindow "CenterWindowOnPrimaryDisplay" "MainWindow must center the first window on a visible display."
+Assert-Contains $mainWindow "SetForegroundWindow" "MainWindow must request foreground activation."
 Assert-Contains $launchLogger "wslc-desktop-launch" "App must write launch diagnostics for silent startup failures."
 Assert-Contains $launchLogger "last-crash\.log" "App must write last-crash diagnostics."
 Assert-Contains $artifactScript "Microsoft\.WindowsAppRuntime\.dll" "Release artifact script must reject non-self-contained Windows App SDK layouts."

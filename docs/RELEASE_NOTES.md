@@ -14,6 +14,8 @@ App startup diagnostics are written under `%LOCALAPPDATA%\WSLC Desktop\Diagnosti
 - `wslc-desktop-launch-YYYYMMDD.log`: launch progress and startup checkpoints.
 - `last-crash.log`: the latest managed startup or WinUI exception captured by the app.
 
+The app-owned startup entry point logs before WinUI `Application.Start`, and the main window is centered and brought to the foreground on launch to reduce silent or off-screen startup failures.
+
 ## Docker API coverage
 
 WSLC Desktop ships a local `wslcd` daemon with a Docker Engine API-compatible named-pipe endpoint at `npipe:////./pipe/wslc-desktop-docker`.

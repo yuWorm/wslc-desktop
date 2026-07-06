@@ -5,6 +5,8 @@ $workflowPath = Join-Path $root ".github\workflows\release.yml"
 $gitignorePath = Join-Path $root ".gitignore"
 $projectPath = Join-Path $root "wslc-desktop.csproj"
 $appPath = Join-Path $root "App.xaml.cs"
+$programPath = Join-Path $root "Program.cs"
+$mainWindowPath = Join-Path $root "MainWindow.xaml.cs"
 $launchLoggerPath = Join-Path $root "Services\AppLaunchLogger.cs"
 $fullReleasePath = Join-Path $root "scripts\Verify-FullRelease.ps1"
 $artifactScriptPath = Join-Path $root "scripts\Build-ReleaseArtifacts.ps1"
@@ -45,12 +47,14 @@ $workflow = Get-Content -Raw $workflowPath
 $gitignore = Get-Content -Raw $gitignorePath
 $project = Get-Content -Raw $projectPath
 $app = Get-Content -Raw $appPath
+$program = Get-Content -Raw $programPath
+$mainWindow = Get-Content -Raw $mainWindowPath
 $launchLogger = Get-Content -Raw $launchLoggerPath
 $fullRelease = Get-Content -Raw $fullReleasePath
 $artifactScript = Get-Content -Raw $artifactScriptPath
 $installerScript = Get-Content -Raw $installerScriptPath
 
-foreach ($path in @($projectPath, $appPath, $launchLoggerPath, $artifactScriptPath, $installerScriptPath, $releaseNotesPath, $dockerMatrixPath, $runtimeMatrixPath)) {
+foreach ($path in @($projectPath, $appPath, $programPath, $mainWindowPath, $launchLoggerPath, $artifactScriptPath, $installerScriptPath, $releaseNotesPath, $dockerMatrixPath, $runtimeMatrixPath)) {
     if (-not (Test-Path $path)) {
         throw "Missing release documentation required by release automation: $path"
     }
@@ -116,9 +120,15 @@ Assert-Contains $project 'ApplicationIcon' "Project must embed the app icon for 
 Assert-Contains $project 'WindowsPackageType' "Project must declare the Release app model."
 Assert-Contains $project 'WindowsAppSDKSelfContained' "Project must declare the Release Windows App SDK deployment mode."
 Assert-Contains $project 'EnableMsixTooling' "Project must keep MSIX tooling conditional by build configuration."
+Assert-Contains $project 'DISABLE_XAML_GENERATED_MAIN' "Project must use the app-owned Program.Main for early startup diagnostics."
 Assert-Contains $project 'sources\\\*\*\\\*' "Project must exclude reference source snapshots from build outputs."
 Assert-Contains $project 'artifacts\\\*\*\\\*' "Project must exclude nested build artifacts from build outputs."
 Assert-Contains $app 'TrySetPrimaryLanguageOverride' "App startup must not crash when Windows language override is unavailable in unpackaged mode."
+Assert-Contains $program 'Program\.Main started' "Program.Main must log before WinUI Application.Start."
+Assert-Contains $program 'WinRT\.ComWrappersSupport\.InitializeComWrappers' "Program.Main must preserve generated WinUI COM wrapper initialization."
+Assert-Contains $program 'Application\.Start' "Program.Main must preserve WinUI Application.Start."
+Assert-Contains $mainWindow 'CenterWindowOnPrimaryDisplay' "MainWindow must be centered on startup so hidden/off-screen windows are less likely."
+Assert-Contains $mainWindow 'SetForegroundWindow' "MainWindow must request foreground activation after startup and tray restore."
 Assert-Contains $launchLogger 'wslc-desktop-launch' "App must write launch diagnostics for silent startup failures."
 Assert-Contains $launchLogger 'last-crash\.log' "App must write a last-crash diagnostic file."
 
