@@ -42,6 +42,15 @@ Recommended:
 
 Docker CLI and Compose are optional for the GUI, but required if you want to run `docker` or `docker compose` against WSLC Desktop.
 
+## Install
+
+GitHub Releases publish two Windows distributions:
+
+- `wslc-desktop-<version>-win-x64-setup.exe` or `wslc-desktop-<version>-win-arm64-setup.exe`: per-user installer. This is the recommended option.
+- `wslc-desktop-<version>-win-x64-portable.zip` or `wslc-desktop-<version>-win-arm64-portable.zip`: portable layout. Extract it to a writable folder and run `wslc-desktop.exe`.
+
+MSIX packages are not published. The Setup.exe installer avoids the MSIX certificate trust step, but unsigned beta installers may still show a Windows SmartScreen warning.
+
 ## First Run
 
 On startup, WSLC Desktop checks the host before starting `wslcd-desktop`.

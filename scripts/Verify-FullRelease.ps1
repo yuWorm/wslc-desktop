@@ -11,7 +11,7 @@ Set-Location $Root
 $HostRid = "win-" + [System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant()
 $ReleaseRid = if ($Platform.Equals("ARM64", [System.StringComparison]::OrdinalIgnoreCase)) { "win-arm64" } elseif ($Platform.Equals("x86", [System.StringComparison]::OrdinalIgnoreCase)) { "win-x86" } else { "win-x64" }
 $ReleaseLayout = Join-Path $Root "bin\$Platform\Release\net10.0-windows10.0.26100.0\$ReleaseRid"
-$ReleaseDaemon = Join-Path $ReleaseLayout "AppX\wslcd\wslcd-desktop.exe"
+$ReleaseDaemon = Join-Path $ReleaseLayout "wslcd\wslcd-desktop.exe"
 
 function Invoke-Step {
     param(
@@ -154,9 +154,9 @@ Invoke-ProcessStep "Release build" "" "dotnet" @(
     "-p:PublishReadyToRun=false",
     "-p:EnableDevelopmentCodeSigning=false")
 
-Invoke-Step "Release packaged daemon exists" {
+Invoke-Step "Release layout daemon exists" {
     if (-not (Test-Path $ReleaseDaemon)) {
-        throw "Packaged daemon was not found at $ReleaseDaemon."
+        throw "Release layout daemon was not found at $ReleaseDaemon."
     }
 }
 
@@ -172,32 +172,16 @@ finally {
 Invoke-ProcessStep "DockerApiCompatVerify full" "DOCKER_API_COMPAT_FULL_OK" "dotnet" @("run", "--project", "tools\DockerApiCompatVerify\DockerApiCompatVerify.csproj", "--no-restore", "--", "full") -AllowFailure:$AllowKnownLocalBlockers
 
 if (-not $SkipPackage) {
-    Invoke-Step "winapp package" -AllowFailure:$AllowKnownLocalBlockers {
-        if (-not (Get-Command winapp -ErrorAction SilentlyContinue)) {
-            throw "winapp CLI is not installed or not on PATH."
-        }
-
-        $cert = Join-Path $Root "artifacts\wslc-desktop-phase20-devcert.pfx"
-        if (-not (Test-Path $cert)) {
-            winapp cert generate --manifest . --output $cert --if-exists overwrite
-        }
-
-        $previousErrorActionPreference = $ErrorActionPreference
-        try {
-            $ErrorActionPreference = "Continue"
-            $output = & winapp package $ReleaseLayout --cert $cert --executable wslc-desktop.exe 2>&1
-            $exitCode = $LASTEXITCODE
-        }
-        finally {
-            $ErrorActionPreference = $previousErrorActionPreference
-        }
-
-        Write-Host ($output | Out-String)
-
-        if ($exitCode -ne 0) {
-            throw "winapp package exited with code $exitCode."
-        }
-    }
+    Invoke-ProcessStep "Release artifacts" "RELEASE_ARTIFACTS_OK" "powershell" @(
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts\Build-ReleaseArtifacts.ps1",
+        "-Platform",
+        $Platform,
+        "-Version",
+        "0.0.0-local",
+        "-SkipSetup") -AllowFailure:$AllowKnownLocalBlockers
 }
 
 Write-Host "WSLC_FULL_RELEASE_VERIFY_OK"

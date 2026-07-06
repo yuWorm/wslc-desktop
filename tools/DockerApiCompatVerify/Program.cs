@@ -913,19 +913,23 @@ static async Task VerifyReadOnlyAsync(CancellationToken cancellationToken)
 static Process StartDaemon(string root, bool requireReleasePackaged = false)
 {
     string publishedDaemon = Path.Combine(root, "artifacts", "wslcd-singlefile", "wslcd-desktop.exe");
+    string releaseLayoutDaemon = Path.Combine(root, "bin", "x64", "Release", "net10.0-windows10.0.26100.0", "win-x64", "wslcd", "wslcd-desktop.exe");
     string releasePackagedDaemon = Path.Combine(root, "bin", "x64", "Release", "net10.0-windows10.0.26100.0", "win-x64", "AppX", "wslcd", "wslcd-desktop.exe");
     string debugPackagedDaemon = Path.Combine(root, "bin", "Debug", "net10.0-windows10.0.26100.0", "win-x64", "AppX", "wslcd", "wslcd-desktop.exe");
     string daemonDll = Path.Combine(root, "src", "wslcd", "bin", "Debug", "net10.0", "wslcd-desktop.dll");
     string legacyPublishedDaemon = Path.Combine(root, "artifacts", "wslcd-singlefile", "wslcd.exe");
+    string legacyReleaseLayoutDaemon = Path.Combine(root, "bin", "x64", "Release", "net10.0-windows10.0.26100.0", "win-x64", "wslcd", "wslcd.exe");
     string legacyReleasePackagedDaemon = Path.Combine(root, "bin", "x64", "Release", "net10.0-windows10.0.26100.0", "win-x64", "AppX", "wslcd", "wslcd.exe");
     string legacyDebugPackagedDaemon = Path.Combine(root, "bin", "Debug", "net10.0-windows10.0.26100.0", "win-x64", "AppX", "wslcd", "wslcd.exe");
     string legacyDaemonDll = Path.Combine(root, "src", "wslcd", "bin", "Debug", "net10.0", "wslcd.dll");
 
     var candidates = new (string FileName, string Arguments, string WorkingDirectory, string PathToCheck)[]
     {
+        (releaseLayoutDaemon, string.Empty, Path.GetDirectoryName(releaseLayoutDaemon) ?? root, releaseLayoutDaemon),
         (releasePackagedDaemon, string.Empty, Path.GetDirectoryName(releasePackagedDaemon) ?? root, releasePackagedDaemon),
         (debugPackagedDaemon, string.Empty, Path.GetDirectoryName(debugPackagedDaemon) ?? root, debugPackagedDaemon),
         (publishedDaemon, string.Empty, Path.GetDirectoryName(publishedDaemon) ?? root, publishedDaemon),
+        (legacyReleaseLayoutDaemon, string.Empty, Path.GetDirectoryName(legacyReleaseLayoutDaemon) ?? root, legacyReleaseLayoutDaemon),
         ("dotnet", $"\"{daemonDll}\"", root, daemonDll),
         (legacyReleasePackagedDaemon, string.Empty, Path.GetDirectoryName(legacyReleasePackagedDaemon) ?? root, legacyReleasePackagedDaemon),
         (legacyDebugPackagedDaemon, string.Empty, Path.GetDirectoryName(legacyDebugPackagedDaemon) ?? root, legacyDebugPackagedDaemon),
@@ -940,9 +944,9 @@ static Process StartDaemon(string root, bool requireReleasePackaged = false)
     {
         throw new FileNotFoundException(
             requireReleasePackaged
-                ? "The Release AppX packaged wslcd-desktop daemon was not found. Build wslc-desktop.csproj for x64 Release before running Docker CLI packaged smoke gates."
+                ? "The Release layout wslcd-desktop daemon was not found. Build wslc-desktop.csproj for x64 Release before running Docker CLI release smoke gates."
                 : "No usable wslcd-desktop daemon candidate was found. Build wslc-desktop or src/wslcd first.",
-            requireReleasePackaged ? releasePackagedDaemon : daemonDll);
+            requireReleasePackaged ? releaseLayoutDaemon : daemonDll);
     }
 
     string logDirectory = Path.Combine(root, "artifacts", "docker-api-compat", "Diagnostics");

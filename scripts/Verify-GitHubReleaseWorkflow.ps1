@@ -4,6 +4,8 @@ $root = Split-Path -Parent $PSScriptRoot
 $workflowPath = Join-Path $root ".github\workflows\release.yml"
 $gitignorePath = Join-Path $root ".gitignore"
 $fullReleasePath = Join-Path $root "scripts\Verify-FullRelease.ps1"
+$artifactScriptPath = Join-Path $root "scripts\Build-ReleaseArtifacts.ps1"
+$installerScriptPath = Join-Path $root "installer\wslc-desktop.iss"
 $releaseNotesPath = Join-Path $root "docs\RELEASE_NOTES.md"
 $dockerMatrixPath = Join-Path $root "docs\DOCKER_API_COMPATIBILITY_MATRIX.md"
 $runtimeMatrixPath = Join-Path $root "docs\RUNTIME_PROVIDER_MATRIX.md"
@@ -39,8 +41,10 @@ if (-not (Test-Path $workflowPath)) {
 $workflow = Get-Content -Raw $workflowPath
 $gitignore = Get-Content -Raw $gitignorePath
 $fullRelease = Get-Content -Raw $fullReleasePath
+$artifactScript = Get-Content -Raw $artifactScriptPath
+$installerScript = Get-Content -Raw $installerScriptPath
 
-foreach ($path in @($releaseNotesPath, $dockerMatrixPath, $runtimeMatrixPath)) {
+foreach ($path in @($artifactScriptPath, $installerScriptPath, $releaseNotesPath, $dockerMatrixPath, $runtimeMatrixPath)) {
     if (-not (Test-Path $path)) {
         throw "Missing release documentation required by release automation: $path"
     }
@@ -63,19 +67,24 @@ Assert-Contains $workflow 'win-x64' "Release workflow must produce a win-x64 pac
 Assert-Contains $workflow 'win-arm64' "Release workflow must produce a win-arm64 package."
 Assert-Contains $workflow 'actions/checkout@v4' "Release workflow must checkout repository sources."
 Assert-Contains $workflow 'actions/setup-dotnet@v4' "Release workflow must install the .NET SDK."
-Assert-Contains $workflow 'microsoft/setup-WinAppCli@v0\.1' "Release workflow must install winapp CLI."
+Assert-Contains $workflow 'choco install innosetup' "Release workflow must install Inno Setup for Setup.exe packaging."
 Assert-Contains $workflow 'Verify-FullRelease\.ps1' "Release workflow must reuse the local full release verifier."
-Assert-Contains $workflow '-SkipPackage' "Release workflow must separate verification from final packaging."
+Assert-Contains $workflow '-SkipPackage' "Release workflow must separate build verification from final artifact creation."
 Assert-Contains $workflow '-AllowKnownLocalBlockers' "Release workflow must tolerate unavailable local WSLC/Docker runtime gates in CI."
-Assert-Contains $workflow 'Package\.appxmanifest' "Release workflow must stamp Package.appxmanifest from the tag."
-Assert-Contains $workflow 'WINDOWS_SIGNING_CERT_BASE64' "Release workflow must support a repository signing certificate secret."
-Assert-Contains $workflow 'WINDOWS_SIGNING_CERT_PASSWORD' "Release workflow must support a repository signing certificate password secret."
-Assert-Contains $workflow 'WINDOWS_PUBLISHER' "Release workflow must support an optional publisher override."
-Assert-Contains $workflow 'winapp package' "Release workflow must package MSIX artifacts."
-Assert-Contains $workflow '--cert-password' "Release workflow must pass the certificate password with winapp package's supported --cert-password option."
-Assert-Contains $workflow '--output' "Release workflow must write MSIX packages to an explicit output path."
-Assert-NotContains $workflow 'winapp package[^\r\n]*--password' "Release workflow must not pass unsupported --password to winapp package."
-Assert-Contains $workflow 'Get-FileHash' "Release workflow must generate checksums."
+Assert-Contains $workflow 'Build-ReleaseArtifacts\.ps1' "Release workflow must build Setup.exe and portable.zip artifacts."
+Assert-Contains $workflow '\*\.exe' "Release workflow must upload Setup.exe artifacts."
+Assert-Contains $workflow '\*\.zip' "Release workflow must upload portable.zip artifacts."
+Assert-NotContains $workflow 'microsoft/setup-WinAppCli@v0\.1' "Release workflow must not install WinApp CLI when publishing only Setup.exe and portable.zip."
+Assert-NotContains $workflow 'WINDOWS_SIGNING_CERT_BASE64' "Release workflow must not require MSIX signing certificate secrets."
+Assert-NotContains $workflow 'WINDOWS_SIGNING_CERT_PASSWORD' "Release workflow must not require MSIX signing certificate secrets."
+Assert-NotContains $workflow 'winapp package' "Release workflow must not package MSIX artifacts."
+Assert-NotContains $workflow '\.msix' "Release workflow must not publish MSIX artifacts."
+Assert-Contains $artifactScript 'Get-FileHash' "Release artifact script must generate checksums."
+Assert-Contains $artifactScript 'Compress-Archive' "Release artifact script must create portable.zip."
+Assert-Contains $artifactScript 'ISCC\.exe' "Release artifact script must create Setup.exe through Inno Setup."
+Assert-Contains $installerScript 'AppName=\{#AppName\}' "Inno Setup script must define the WSLC Desktop app identity."
+Assert-Contains $installerScript 'Source: "\{#SourceDir\}\\\*"' "Inno Setup script must package the prepared release layout."
+Assert-Contains $installerScript 'DefaultDirName=\{localappdata\}\\Programs\\WSLC Desktop' "Inno Setup script must install per-user without elevation."
 Assert-Contains $workflow 'actions/upload-artifact@v4' "Release workflow must upload per-platform artifacts."
 Assert-Contains $workflow 'actions/download-artifact@v4' "Release workflow must collect matrix artifacts before release."
 Assert-Contains $workflow 'softprops/action-gh-release@v2' "Release workflow must publish artifacts to GitHub Releases."

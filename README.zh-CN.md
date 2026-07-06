@@ -42,6 +42,15 @@ wsl --update
 
 Docker CLI 和 Compose 对 GUI 不是必须项，但如果要使用 `docker` 或 `docker compose` 连接 WSLC Desktop，就需要安装。
 
+## 安装
+
+GitHub Releases 会发布两种 Windows 分发包：
+
+- `wslc-desktop-<version>-win-x64-setup.exe` 或 `wslc-desktop-<version>-win-arm64-setup.exe`：当前用户安装器，推荐使用。
+- `wslc-desktop-<version>-win-x64-portable.zip` 或 `wslc-desktop-<version>-win-arm64-portable.zip`：便携版。解压到可写目录后运行 `wslc-desktop.exe`。
+
+不再发布 MSIX 包。Setup.exe 可以避开 MSIX 证书信任步骤，但未签名的 beta 安装器仍可能触发 Windows SmartScreen 提示。
+
 ## 首次启动
 
 应用启动时会先检查宿主环境，再启动 `wslcd-desktop`。

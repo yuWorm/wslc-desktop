@@ -1,5 +1,14 @@
 # WSLC Desktop Release Notes
 
+## Distribution
+
+Release assets are published as:
+
+- `Setup.exe`: a per-user installer built with Inno Setup. It does not require MSIX certificate trust.
+- `portable.zip`: the same release layout packaged for manual extraction.
+
+MSIX packages are not published for this release line. Unsigned Setup.exe builds can still trigger Windows SmartScreen until a trusted code-signing certificate is added.
+
 ## Docker API coverage
 
 WSLC Desktop ships a local `wslcd` daemon with a Docker Engine API-compatible named-pipe endpoint at `npipe:////./pipe/wslc-desktop-docker`.
@@ -33,13 +42,13 @@ The endpoint-by-endpoint source of truth is `docs/DOCKER_API_COMPATIBILITY_MATRI
 - Kestrel named-pipe transport is configured with `CurrentUserOnly = true`.
 - Docker API-compatible pipe access is treated as runtime control. Do not expose the pipe to other users or unauthenticated TCP listeners.
 - External Docker API providers require explicit user configuration. TCP/HTTP(S) provider hosts require the user-facing `AllowTcpDockerApi` confirmation.
-- Startup-at-login uses the packaged Windows StartupTask API and remains opt-in.
+- Startup-at-login remains opt-in. Packaged runs use the Windows StartupTask API; Setup.exe and portable runs use the current user's Windows Run key.
 
 ## Known limitations
 
-- Docker CLI read-only, lifecycle, image pull, volume list, context, and Compose gates passed against the packaged daemon on the current development machine.
-- Docker CLI logs, `stats --no-stream`, and non-interactive exec gates pass against the packaged daemon. Interactive TTY exec remains limited by provider capability.
-- Windows App Control can block rebuilt Debug verifier and daemon dependency DLLs with `0x800711C7` on this machine. Release verification uses the packaged AppX `wslcd.exe` path through `WSLCD_SMOKE_DAEMON_PATH`, which passed the full daemon and Docker API gates.
+- Docker CLI read-only, lifecycle, image pull, volume list, context, and Compose gates passed against the release daemon on the current development machine.
+- Docker CLI logs, `stats --no-stream`, and non-interactive exec gates pass against the release daemon. Interactive TTY exec remains limited by provider capability.
+- Windows App Control can block rebuilt Debug verifier and daemon dependency DLLs with `0x800711C7` on this machine. Release verification uses the release layout `wslcd\wslcd-desktop.exe` path through `WSLCD_SMOKE_DAEMON_PATH`, which passed the full daemon and Docker API gates.
 - `Microsoft.WSL.Containers` SDK sessions are not the default provider because current observed SDK session resources do not match the user-visible `wslc.exe` resource set.
-- Packaged daemon verification requires the MSIX layout to include `wslcd.exe`, `wslcd.dll`, and daemon dependency DLLs beside the WinUI executable.
-- Compatibility matrix metadata is embedded in diagnostics when the repository docs are available; packaged layouts may report the matrix file as unavailable.
+- Release artifact verification requires the layout to include `wslcd\wslcd-desktop.exe`, `wslcd-desktop.dll`, and daemon dependency DLLs beside the WinUI executable.
+- Compatibility matrix metadata is embedded in diagnostics when the repository docs are available; installed or portable layouts may report the matrix file as unavailable.
